@@ -167,6 +167,9 @@ if __name__ == "__main__":
         raise ValueError(
             "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
     data_loader = dict()
+    ###
+
+    ###test
     if config.TRAIN.DATA.DATA_PATH:
         train_data_loader = train_loader(
             name="train",
