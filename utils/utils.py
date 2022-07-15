@@ -9,6 +9,7 @@ def next_power_of_2(x):
 
 def sample(a, len):
     """Samples a sequence into specific length."""
+    # a: label    len:frames_length
     return np.interp(
         np.linspace(
             1, a.shape[0], len), np.linspace(

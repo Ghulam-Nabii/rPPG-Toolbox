@@ -28,7 +28,7 @@ class BaseLoader(Dataset):
             "--preprocess", default=None, action='store_true')
         return parser
 
-    def __init__(self, name, data_path, config_data):
+    def __init__(self, name, data_path, config_data,train_or_test):
         """Inits dataloader with lists of files.
 
         Args:
@@ -39,7 +39,11 @@ class BaseLoader(Dataset):
         self.name = name
         self.data_path = data_path
         # self.cached_path = os.path.join(config_data.CACHED_PATH, name)
-        self.cached_path = config_data.CACHED_PATH
+        self.train_or_test = train_or_test
+        if self.train_or_test:
+            self.cached_path = config_data.CACHED_PATH+'_train'
+        else:
+            self.cached_path = config_data.CACHED_PATH + '_test'
         self.inputs = list()
         self.labels = list()
         self.len = 0
@@ -235,6 +239,7 @@ class BaseLoader(Dataset):
         self.inputs = inputs
         self.labels = labels
         self.len = len(inputs)
+        print("load lens:",self.len)
 
     @staticmethod
     def diff_normalize_data(data):

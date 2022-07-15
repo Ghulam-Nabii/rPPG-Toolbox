@@ -44,7 +44,7 @@ def seed_worker(worker_id):
 def add_args(parser):
     """Adds arguments for parser."""
     parser.add_argument('--config_file', required=False,
-                        default="configs/PURE_TSCAN_BASIC.yaml", type=str, help="The name of the model.")
+                        default="configs/UBFC_DEEPPHYS_BASIC.yaml", type=str, help="The name of the model.")
     parser.add_argument('--do_train', action='store_true')
     parser.add_argument(
         '--device',
@@ -167,14 +167,13 @@ if __name__ == "__main__":
         raise ValueError(
             "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
     data_loader = dict()
-    ###
 
-    ###test
     if config.TRAIN.DATA.DATA_PATH:
         train_data_loader = train_loader(
             name="train",
             data_path=config.TRAIN.DATA.DATA_PATH,
-            config_data=config.TRAIN.DATA)
+            config_data=config.TRAIN.DATA,
+            train_or_test = True)
         data_loader['train'] = DataLoader(
             dataset=train_data_loader,
             num_workers=4,
@@ -190,7 +189,8 @@ if __name__ == "__main__":
         valid_data = valid_loader(
             name="valid",
             data_path=config.VALID.DATA.DATA_PATH,
-            config_data=config.VALID.DATA)
+            config_data=config.VALID.DATA,
+            train_or_test = False)
         data_loader["valid"] = DataLoader(
             dataset=valid_data,
             num_workers=4,
@@ -206,7 +206,8 @@ if __name__ == "__main__":
         test_data = test_loader(
             name="test",
             data_path=config.TEST.DATA.DATA_PATH,
-            config_data=config.TEST.DATA)
+            config_data=config.TEST.DATA,
+            train_or_test = False)
         data_loader["test"] = DataLoader(
             dataset=test_data,
             num_workers=4,

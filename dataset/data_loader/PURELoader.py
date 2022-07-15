@@ -21,7 +21,7 @@ from multiprocessing import Pool
 class PURELoader(BaseLoader):
     """The data loader for the PURE dataset."""
 
-    def __init__(self, name, data_path, config_data):
+    def __init__(self, name, data_path, config_data,train_or_test):
         """Initializes an PURE dataloader.
             Args:
                 data_path(str): path of a folder which stores raw video and bvp data.
@@ -42,7 +42,7 @@ class PURELoader(BaseLoader):
                 name(str): name of the dataloader.
                 config_data(CfgNode): data settings(ref:config.py).
         """
-        super().__init__(name, data_path, config_data)
+        super().__init__(name, data_path, config_data,train_or_test)
 
     def get_data(self, data_path):
         """Returns data directories under the path(For COHFACE dataset)."""
@@ -56,7 +56,12 @@ class PURELoader(BaseLoader):
     def preprocess_dataset(self, data_dirs, config_preprocess):
         """Preprocesses the raw data."""
         file_num = len(data_dirs)
-        for i in range(file_num):
+        print("file_num",file_num)
+        if self.train_or_test:
+            choose_range = range(0,file_num//3 *2 )
+        else:
+            choose_range = range(file_num // 3 * 2, file_num)
+        for i in choose_range:
             filename = os.path.split(data_dirs[i]['path'])[-1]
             saved_filename = data_dirs[i]['index']
             frames = self.read_video(
@@ -79,6 +84,10 @@ class PURELoader(BaseLoader):
 
             self.len += self.save(frames_clips, bvps_clips,
                                   saved_filename)
+        if self.train_or_test:
+            print("train dataset len",self.len)
+        else:
+            print("valid/test dataset len",self.len)
 
     @staticmethod
     def read_video(video_file):
