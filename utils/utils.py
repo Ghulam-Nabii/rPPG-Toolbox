@@ -70,7 +70,7 @@ def label_fft(predictions, labels, signal='pulse', fs=30, bpFlag=True):
     print("f_label",f_label.shape)
     print("pxx_label",pxx_label.shape)
     plt.plot(f_label*60, pxx_label.reshape(-1))
-    plt.title("UBFC frequency domain:")
+    plt.title("PURE frequency domain:")
     plt.show()
     if signal == 'pulse':
         # regular Heart beat are 0.75*60 and 2.5*60
@@ -85,7 +85,7 @@ def label_fft(predictions, labels, signal='pulse', fs=30, bpFlag=True):
     print("label_window",label_window.shape)
     print("label_window",amp_window.shape)
     plt.plot(label_window.reshape(-1)*60, amp_window.reshape(-1))
-    plt.title("UBFC frequency domain butter:")
+    plt.title("PURE frequency domain butter:")
     plt.show()
     # MAE
     temp_HR, temp_HR_0 = calculate_HR(
