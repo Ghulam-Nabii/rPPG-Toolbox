@@ -124,26 +124,31 @@ class TANGLoader(BaseLoader):
             success, frames[frames_count] = cap.read()
             frames_count += 1
         print("frames",frames.shape)
-        # np.save('/data1/acsp/Yuzhe_Zhang/rPPG-Toolbox/PreprocessedData/1/output', frames)
+        np.save('/data1/acsp/Yuzhe_Zhang/rPPG-Toolbox/PreprocessedData/1/output', frames)
         return frames
 
     @staticmethod
     def read_wave(bvp_file, frames_length):
         """Reads a bvp signal file."""
-        print(bvp_file)
         gt_pulse, gt_time = generate_pulse_gt(bvp_file, 0)
         gt_pulse = np.array(gt_pulse)
-        print("gt_pulse_num",len(gt_pulse))
-        print("gt_time_num",len(gt_time))
-        print(frames_length)
+        # print("gt_pulse_num",len(gt_pulse))
+        # print("gt_time_num",len(gt_time))
+        # print(frames_length)
         gt_start_time = gt_time[0]
         gt_end_time = gt_start_time + frames_length/60 * 1000
-        print("gt_start_time",gt_start_time)
-        print("gt_end_time",gt_end_time)
+        for i in range(len(gt_pulse)):
+            if gt_time[i] >= gt_end_time:
+                print(i, gt_time[i])
+                gt_pulse = gt_pulse[0:i]
+                gt_time = gt_time[0:i]
+                break
+        # print("gt_start_time",gt_start_time)
+        # print("gt_end_time",gt_end_time)
         re_time = np.linspace(gt_start_time, gt_end_time, frames_length)
         re_gt_pulse = np.interp(re_time, gt_time, gt_pulse)
         gt_length = len(re_gt_pulse)
-        print("gt_length:", gt_length)
+        # print("gt_length:", gt_length)
         return re_gt_pulse
 
 
