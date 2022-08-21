@@ -7,6 +7,9 @@ An end-to-end training pipleine for neural network methods.
 
   python main_neural_method.py --config_file configs/COHFACE_TSCAN_BASIC.yaml --data_path "G:\\COHFACE"
 """
+
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 import argparse
 from config import get_config
 from torch.utils.data import DataLoader
@@ -38,7 +41,7 @@ def seed_worker(worker_id):
 def add_args(parser):
     """Adds arguments for parser."""
     parser.add_argument('--config_file', required=False,
-                        default="configs/UBFC_SIGNAL.yaml", type=str, help="The name of the model.")
+                        default="configs/TANG_SIGNAL.yaml", type=str, help="The name of the model.")
     # Neural Method Sample YAMSL LIST:
     #   SCAMPS_SCAMPS_UBFC_TSCAN_BASIC.yaml
     #   SCAMPS_SCAMPS_UBFC_DEEPPHYS_BASIC.yaml
@@ -121,6 +124,8 @@ if __name__ == "__main__":
             train_loader = data_loader.PURELoader.PURELoader
         elif config.TRAIN.DATA.DATASET == "SYNTHETICS":
             train_loader = data_loader.SyntheticsLoader.SyntheticsLoader
+        elif config.SIGNAL.DATA.DATASET == "TANG":
+            signal_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
@@ -134,6 +139,8 @@ if __name__ == "__main__":
             valid_loader = data_loader.PURELoader.PURELoader
         elif config.VALID.DATA.DATASET == "SYNTHETICS":
             valid_loader = data_loader.SyntheticsLoader.SyntheticsLoader
+        elif config.SIGNAL.DATA.DATASET == "TANG":
+            signal_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
@@ -147,6 +154,8 @@ if __name__ == "__main__":
             test_loader = data_loader.PURELoader.PURELoader
         elif config.TEST.DATA.DATASET == "SYNTHETICS":
             test_loader = data_loader.SyntheticsLoader.SyntheticsLoader
+        elif config.SIGNAL.DATA.DATASET == "TANG":
+            signal_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
@@ -206,6 +215,8 @@ if __name__ == "__main__":
             signal_loader = data_loader.PURELoader.PURELoader
         elif config.SIGNAL.DATA.DATASET == "SYNTHETICS":
             signal_loader = data_loader.SyntheticsLoader.SyntheticsLoader
+        elif config.SIGNAL.DATA.DATASET == "TANG":
+            signal_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
