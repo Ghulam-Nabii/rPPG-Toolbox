@@ -124,8 +124,8 @@ if __name__ == "__main__":
             train_loader = data_loader.PURELoader.PURELoader
         elif config.TRAIN.DATA.DATASET == "SYNTHETICS":
             train_loader = data_loader.SyntheticsLoader.SyntheticsLoader
-        elif config.SIGNAL.DATA.DATASET == "TANG":
-            signal_loader = data_loader.TANGLoader.TANGLoader
+        elif config.TRAIN.DATA.DATASET == "TANG":
+            train_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
@@ -139,8 +139,8 @@ if __name__ == "__main__":
             valid_loader = data_loader.PURELoader.PURELoader
         elif config.VALID.DATA.DATASET == "SYNTHETICS":
             valid_loader = data_loader.SyntheticsLoader.SyntheticsLoader
-        elif config.SIGNAL.DATA.DATASET == "TANG":
-            signal_loader = data_loader.TANGLoader.TANGLoader
+        elif config.VALID.DATA.DATASET == "TANG":
+            valid_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
@@ -154,8 +154,8 @@ if __name__ == "__main__":
             test_loader = data_loader.PURELoader.PURELoader
         elif config.TEST.DATA.DATASET == "SYNTHETICS":
             test_loader = data_loader.SyntheticsLoader.SyntheticsLoader
-        elif config.SIGNAL.DATA.DATASET == "TANG":
-            signal_loader = data_loader.TANGLoader.TANGLoader
+        elif config.TEST.DATA.DATASET == "TANG":
+            test_loader = data_loader.TANGLoader.TANGLoader
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
