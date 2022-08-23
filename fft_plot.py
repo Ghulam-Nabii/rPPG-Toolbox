@@ -29,7 +29,7 @@ from collections import OrderedDict
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-
+from utils.utils import label_fft
 
 
 activation = {}
@@ -207,19 +207,11 @@ def calculate_metrics(predictions, labels):
 
 
 if __name__ == "__main__":
-    # cached_path = "/data2/rppg_datasets/PreprocessedData/UBF" \
-    # "C_SizeW128_SizeH128_ClipLength128_DataTypeStandardized_L" \
-    # "abelTypeStandardized_Large_boxTrue_Large_size1.5_D"\
-    # "yamic_DetFalse_det_len180"
-    # cached_path = "/data2/rppg_datasets/Preprocessed" \
-    #               "Data/UBFC_SizeW128_SizeH128_ClipLength12" \
-    #               "8_DataTypeRaw_LabelTypeRaw_Large_boxTrue_Larg" \
-    #               "e_size1.5_Dyamic_DetFalse_det_len180/"
+    # set data path
     cached_path = "/data2/rppg_datasets/PreprocessedData" \
                   "/UBFC_SizeW128_SizeH128_ClipLength128_Data" \
                   "TypeNormalized_LabelTypeNormalized_Large_boxT" \
                   "rue_Large_size1.5_Dyamic_DetFalse_det_len180/"
-    # cached_path = "/data2/rppg_datasets/PreprocessedData/PURE_SizeW128_SizeH128_ClipLength128_DataTypeStandardized_LabelTypeStandardized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180_0.8_1.0/"
     inputs_data = glob.glob(os.path.join(cached_path, "subject33_input*.npy"))
     labels_data = [input.replace("input", "label") for input in inputs_data]
     assert (len(inputs_data) == len(labels_data))
@@ -271,18 +263,7 @@ if __name__ == "__main__":
                          "5_Dyamic_DetFalse_det_len180/PURE_PURE_UBFC_physnet.pth_Epoch3.pth"
     model.load_state_dict(torch.load(person_model_paths, map_location=torch.device('cuda')))
 
-
-    # model2 = DeepPhys(img_size=72).to("cuda")
-    # model2 = torch.nn.DataParallel(model2, device_ids=list(range(4)))
-    # person_model_paths2 = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreTrainedModels/PURE_SizeW72_SizeH72_ClipLength180_DataTypeNormalized_Standardized_LabelTypeNormalized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180/PURE_UBFC_deepphys.pth_Epoch3.pth"
-    # model2.load_state_dict(torch.load(person_model_paths2, map_location=torch.device('cuda')))
     model.eval()
-    # model2.eval()
-
-    # model.attn_mask_1.register_forward_hook(get_activation('attn_mask_1'))
-    # mask = activation['attn_mask_1'][0].view(34, 34)
-    # mask = mask / torch.max(mask)
-
     predictions = dict()
     labels = dict()
     predictions2 = dict()
@@ -293,140 +274,16 @@ if __name__ == "__main__":
             data = torch.from_numpy(data)
             label = torch.from_numpy(label)
             data_test, labels_test = data.to("cuda").unsqueeze(0), label.to("cuda").unsqueeze(0)
-            pred_ppg_test, x_visual, x_visual3232, x_visual1616 = model(data_test)
+            # pred_ppg_test, x_visual, x_visual3232, x_visual1616 = model(data_test)
             subj_index = filename
             sort_index = int(chunk_id)
             if subj_index not in predictions.keys():
                 predictions[subj_index] = dict()
                 labels[subj_index] = dict()
-            predictions[subj_index][sort_index] = pred_ppg_test
+            predictions[subj_index][sort_index] = data_test
             labels[subj_index][sort_index] = labels_test
-            # plt.figure(figsize=(8,8), dpi=80)
-            # plt.plot(pred_ppg_test.cpu().numpy())
-            # plt.title("TSCAN:"+subj_index+str(sort_index))
-            # plt.show()
-        print(data_test)
-        plt.figure(figsize=(8, 8), dpi=80)
-        plt.imshow(np.transpose(data_test[0, :, 0, :, :].cpu().numpy(), (1, 2, 0)))
-        plt.title("data1")
-        plt.show()
-        for idx in range(length2):
-            data2, label2, filename2, chunk_id2 = getitem(inputs_data2,labels_data2,idx)
-            data2 = torch.from_numpy(data2)
-            label2 = torch.from_numpy(label2)
-            data_test2, labels_test2 = data2.to("cuda").unsqueeze(0), label2.to("cuda").unsqueeze(0)
-            pred_ppg_test2, _, _, _ = model(data_test2)
-            subj_index2 = filename2
-            sort_index2 = int(chunk_id2)
-            if subj_index2 not in predictions2.keys():
-                predictions2[subj_index2] = dict()
-                labels2[subj_index2] = dict()
-            predictions2[subj_index2][sort_index2] = pred_ppg_test2
-            labels2[subj_index2][sort_index2] = labels_test2
-        print(data_test2)
-        plt.figure(figsize=(8, 8), dpi=80)
-        plt.imshow(np.transpose(data_test2[0, :, 0, :, :].cpu().numpy(), (1, 2, 0)))
-        plt.title("data2")
-        plt.show()
-    physnet_pred, label1 = cat_pred(predictions, labels)
-    physnet_pred2, label2 = cat_pred(predictions2, labels2)
-    print(physnet_pred.shape)
-
-
-    plt.figure(figsize=(8, 8), dpi=80)
-    plt.plot(physnet_pred.cpu().numpy())
-    plt.title("Physnet1:")
-    plt.show()
-    plt.figure(figsize=(8, 8), dpi=80)
-    plt.plot(label1.cpu().numpy())
-    plt.title("Physnet1_label:")
-    plt.show()
-    plt.figure(figsize=(8, 8), dpi=80)
-    plt.plot(physnet_pred2.cpu().numpy())
-    plt.title("Physnet2:")
-    plt.show()
-    plt.figure(figsize=(8, 8), dpi=80)
-    plt.plot(label2.cpu().numpy())
-    plt.title("Physnet2_label:")
-    plt.show()
-    label_sub = label1 - label2
-
-    plt.figure(figsize=(8, 8), dpi=80)
-    plt.plot(label_sub.cpu().numpy())
-    plt.title("label Sub:" )
-    plt.show()
-
-    gt_hr_fft, pred_hr_fft = calculate_metric_per_video(
-        physnet_pred, label1, fs=30)
-    gt_hr_peak, pred_hr_peak = calculate_metric_peak_per_video(
-        physnet_pred, label1, fs=30)
-
-    gt_hr_fft2, pred_hr_fft2 = calculate_metric_per_video(
-        physnet_pred2, label2, fs=30)
-    gt_hr_peak2, pred_hr_peak2 = calculate_metric_peak_per_video(
-        physnet_pred2, label2, fs=30)
-    print(subj_index)
-    print("physnet_fft:",pred_hr_fft)
-    print("gt_fft:",gt_hr_fft)
-    print("tscan_peak:",pred_hr_peak)
-    print("gt_peak:",gt_hr_peak)
-
-    print(subj_index2)
-    print("physnet_fft2:",pred_hr_fft2)
-    print("gt_fft2:",gt_hr_fft2)
-    print("physnet_peak2:",pred_hr_peak2)
-    print("gt_peak2:",gt_hr_peak2)
-    # gt_hr_fft, pred_hr_fft_2 = calculate_metric_per_video(
-    #     deep_pred, label2, fs=30)
-    # gt_hr_peak, pred_hr_peak = calculate_metric_peak_per_video(
-    #     deep_pred, label2, fs=30)
-    # print("deepphys_fft:",pred_hr_fft_2)
-    # print("deepphys_peak:",pred_hr_peak)
-
-    calculate_metrics(predictions, labels)
+    _, label1 = cat_pred(predictions, labels)
+    label_fft(label1, label1)
 
 
 
-    # cached_path = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreprocessedData/UBFC_SizeW72_SizeH72_ClipLength180_DataTypeNormalized_Standardized_LabelTypeNormalized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180/"
-    print("success!")
-
-    cached_path = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/Preprocess" \
-                  "edData/UBFC_SizeW72_SizeH72_ClipLength180_DataTypeNor" \
-                  "malized_Standardized_LabelTypeNormalized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180/"
-    inputs_data_con = glob.glob(os.path.join(cached_path, "subject8_input*.npy"))
-    labels_data_con = [input.replace("input", "label") for input in inputs_data_con]
-    assert (len(inputs_data_con) == len(labels_data_con))
-    length_2 = len(inputs_data_con)
-    print("load lens:", length_2)
-
-    model2 = DeepPhys(img_size=72).to("cuda")
-    model2 = torch.nn.DataParallel(model2, device_ids=list(range(4)))
-    person_model_paths2 = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreTrainedModels/PURE_SizeW72_SizeH72_ClipLength180_DataTypeNormalized_Standardized_LabelTypeNormalized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180/PURE_UBFC_deepphys.pth_Epoch3.pth"
-    model2.load_state_dict(torch.load(person_model_paths2, map_location=torch.device('cuda')))
-
-    predictions_con = dict()
-    labels_con = dict()
-    with torch.no_grad():
-        for idx in range(length_2):
-            data, label, filename, chunk_id = getitem(inputs_data_con,labels_data_con,idx)
-            data = torch.from_numpy(data)
-            label = torch.from_numpy(label)
-            data_test, labels_test = data.to("cuda"), label.to("cuda")
-            D, C, H, W = data_test.shape
-            data_test = data_test.contiguous().view(D, C, H, W)
-            labels_test = labels_test.contiguous().view(-1, 1)
-            pred_ppg_test = model2(data_test)
-            subj_index = filename
-            sort_index = int(chunk_id)
-            if subj_index not in predictions_con.keys():
-                predictions_con[subj_index] = dict()
-                labels_con[subj_index] = dict()
-            predictions_con[subj_index][sort_index] = pred_ppg_test
-            labels_con[subj_index][sort_index] = labels_test
-    calculate_metrics(predictions_con, labels_con)
-
-
-
-# for name, layer in model.named_modules():
-# ...     if isinstance(layer, torch.nn.Conv2d):
-# ...             print(name, layer)
