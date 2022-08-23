@@ -88,11 +88,7 @@ def cat_pred(predictions, labels):
     predict_hr_peak_all = list()
     gt_hr_peak_all = list()
     label_hr = list()
-    label_dict = read_label("UBFC")
-    white_list = []
     for index in predictions.keys():
-        if index in white_list:
-            continue
         prediction = reform_data_from_dict(predictions[index])
         label = reform_data_from_dict(labels[index])
     return prediction, label
@@ -207,7 +203,7 @@ def calculate_metrics(predictions, labels):
 
 
 if __name__ == "__main__":
-    # set data path
+    # set data path and the target file
     cached_path = "/data2/rppg_datasets/PreprocessedData" \
                   "/UBFC_SizeW128_SizeH128_ClipLength128_Data" \
                   "TypeNormalized_LabelTypeNormalized_Large_boxT" \
@@ -218,6 +214,7 @@ if __name__ == "__main__":
     length = len(inputs_data)
     print("load lens:", length)
 
+    ### ignore it
     cached_path2 = "/data2/rppg_datasets/PreprocessedData/UBF" \
     "C_SizeW128_SizeH128_ClipLength128_DataTypeStandardized_L" \
     "abelTypeStandardized_Large_boxTrue_Large_size1.5_D"\
@@ -234,34 +231,18 @@ if __name__ == "__main__":
     length2 = len(inputs_data2)
     print("load lens:", length2)
 
-    # Deepphys
-    # model = DeepPhys(img_size=72).to("cuda")
-    # model = torch.nn.DataParallel(model, device_ids=list(range(4)))
-    # person_model_paths = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreTrainedModels/deepphys_synthetics_10epoch_geforce2080ti_Epoch9.pth"
-    # model.load_state_dict(torch.load(person_model_paths, map_location=torch.device('cuda')))
-
     # TSCAN
     model = PhysNet_padding_Encoder_Decoder_MAX(
             frames=128).to("cuda")  # [3, T, 128,128]
-    # model = torch.nn.DataParallel(model, device_ids=list(range(1)))
-    # person_model_paths = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreTrai" \
-    #                      "nedModels/PURE_SizeW128_SizeH128_ClipLength128_DataTypeStandardi" \
-    #                      "zed_LabelTypeStandardized_Large_boxTrue_Large_size1.5_Dyamic_DetFa" \
-    #                      "lse_det_len180/PURE_PURE_UBFC_physnet.pth_Epoch11.pth"
-    # person_model_paths ="/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPPG-Toolbox/PreTrainedMod" \
-    #                     "els/PURE_SizeW128_SizeH128_ClipLength128_DataTypeNormalized_LabelTypeN" \
-    #                     "ormalized_Large_boxTrue_Large_size1.5_Dyamic_DetFalse_det_len180/PURE_PUR" \
-    #                     "E_UBFC_physnet.pth_Epoch11.pth"
-    # person_model_paths = "/data1/acsp/Yuzhe_Zhang/Toolbox_master_2/rPP" \
-    # "G-Toolbox/PreTrainedModels/PURE_SizeW128_SizeH12" \
-    # "8_ClipLength128_DataTypeRaw_LabelTypeRaw_Large_boxT" \
-    # "rue_Large_size1.5_Dyamic_DetFalse_det_len180/PURE_PURE_UBFC_physnet.pth_Epoch9.pth"
     person_model_paths = "/data1/acsp/Yuzhe_Zhang/Toolb" \
                          "ox_master_2/rPPG-Toolbox/PreTrainedModels/" \
                          "PURE_SizeW128_SizeH128_ClipLength128_DataTypeStand" \
                          "ardized_LabelTypeStandardized_Large_boxTrue_Large_size1." \
                          "5_Dyamic_DetFalse_det_len180/PURE_PURE_UBFC_physnet.pth_Epoch3.pth"
     model.load_state_dict(torch.load(person_model_paths, map_location=torch.device('cuda')))
+    ## ignore above
+
+
 
     model.eval()
     predictions = dict()
