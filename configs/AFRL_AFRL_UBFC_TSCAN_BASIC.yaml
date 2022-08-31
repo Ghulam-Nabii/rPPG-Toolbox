@@ -1,8 +1,8 @@
 BASE: ['']
-TRAIN_OR_TEST: "train_and_test"      # "train_and_test"  or "only_test"
+TOOLBOX_MODE: "train_and_test"      # "train_and_test"  or "only_test"
 TRAIN:
   BATCH_SIZE: 2
-  EPOCHS: 10
+  EPOCHS: 3
   LR: 1e-3
   MODEL_FILE_NAME: AFRL_AFRL_UBFC_tscan.pth
   DATA:
@@ -19,12 +19,12 @@ TRAIN:
       DATA_TYPE: ['Normalized','Standardized']
       LABEL_TYPE: Normalized
       DO_CHUNK: False
-      CLIP_LENGTH: 180
+      CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DETECTION_LENGTH: 180
+      DYNAMIC_DETECTION_FREQUENCY: 180
       CROP_FACE: False
       LARGE_FACE_BOX: False
-      LARGER_BOX_SIZE: 1.5
+      LARGE_BOX_COEF: 1.5
       H: 72
       W: 72
 VALID:
@@ -42,12 +42,12 @@ VALID:
       DATA_TYPE: [ 'Normalized','Standardized' ]
       LABEL_TYPE: Normalized
       DO_CHUNK: False
-      CLIP_LENGTH: 180
+      CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DETECTION_LENGTH: 180
+      DYNAMIC_DETECTION_FREQUENCY: 180
       CROP_FACE: False
       LARGE_FACE_BOX: False
-      LARGER_BOX_SIZE: 1.5
+      LARGE_BOX_COEF: 1.5
       H: 72
       W: 72
 TEST:
@@ -66,12 +66,12 @@ TEST:
       DATA_TYPE: [ 'Normalized','Standardized' ]
       LABEL_TYPE: Normalized
       DO_CHUNK: True
-      CLIP_LENGTH: 180
+      CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DETECTION_LENGTH: 180
+      DYNAMIC_DETECTION_FREQUENCY: 180
       CROP_FACE: True
       LARGE_FACE_BOX: True
-      LARGER_BOX_SIZE: 1.5
+      LARGE_BOX_COEF: 1.5
       H: 72
       W: 72
 DEVICE: cuda:0

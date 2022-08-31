@@ -182,7 +182,7 @@ if __name__ == "__main__":
         else:
             data_loader_dict['train'] = None
 
-        if config.TRAIN.DATA.DATA_PATH:
+        if config.VALID.DATA.DATA_PATH:
             valid_data = valid_loader(
                 name="valid",
                 data_path=config.VALID.DATA.DATA_PATH,
