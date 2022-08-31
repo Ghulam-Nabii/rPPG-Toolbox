@@ -127,10 +127,11 @@ if __name__ == "__main__":
         elif config.TRAIN.DATA.DATASET == "AFRL":
             train_loader = data_loader.AFRLLoader.AFRLLoader
         elif config.TRAIN.DATA.DATASET == "MULTIDATASET":
-            train_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            #train_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            raise ValueError("MULTIDATASET not yet supported.")
+            
         else:
-            raise ValueError(
-                "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
+            raise ValueError("Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
 
         # valid_loader
         if config.VALID.DATA.DATASET == "COHFACE":
@@ -144,10 +145,10 @@ if __name__ == "__main__":
         elif config.VALID.DATA.DATASET == "AFRL":
             valid_loader = data_loader.AFRLLoader.AFRLLoader
         elif config.VALID.DATA.DATASET == "MULTIDATASET":
-            valid_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            #valid_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            raise ValueError("MULTIDATASET not yet supported.")
         else:
-            raise ValueError(
-                "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
+            raise ValueError("Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
 
         # test_loader
         if config.TEST.DATA.DATASET == "COHFACE":
@@ -161,10 +162,10 @@ if __name__ == "__main__":
         elif config.TEST.DATA.DATASET == "AFRL":
             test_loader = data_loader.AFRLLoader.AFRLLoader
         elif config.TEST.DATA.DATASET == "MULTIDATASET":
-            test_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            #test_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            raise ValueError("MULTIDATASET not yet supported.")
         else:
-            raise ValueError(
-                "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
+            raise ValueError("Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
 
         if config.TRAIN.DATA.DATA_PATH:
             train_data_loader = train_loader(
@@ -224,6 +225,11 @@ if __name__ == "__main__":
             signal_loader = data_loader.PURELoader.PURELoader
         elif config.SIGNAL.DATA.DATASET == "SYNTHETICS":
             signal_loader = data_loader.SyntheticsLoader.SyntheticsLoader
+        elif config.SIGNAL.DATA.DATASET == "AFRL":
+            signal_loader = data_loader.AFRLLoader.AFRLLoader
+        elif config.SIGNAL.DATA.DATASET== "MULTIDATASET":
+            #signal_loader = data_loader.MultiDatasetLoader.MultiDatasetLoader
+            raise ValueError("MULTIDATASET not yet supported.")
         else:
             raise ValueError(
                 "Unsupported dataset! Currently supporting COHFACE, UBFC and PURE.")
