@@ -21,6 +21,7 @@ from tqdm import tqdm
 class PURELoader(BaseLoader):
     """The data loader for the PURE dataset."""
 
+
     def __init__(self, name, data_path, config_data):
         """Initializes an PURE dataloader.
             Args:
@@ -44,6 +45,7 @@ class PURELoader(BaseLoader):
         """
         super().__init__(name, data_path, config_data)
 
+
     def get_data(self, data_path):
         """Returns data directories under the path(For PURE dataset)."""
         data_dirs = glob.glob(data_path + os.sep + "*-*")
@@ -51,9 +53,49 @@ class PURELoader(BaseLoader):
             raise ValueError(self.name+ " dataset get data error!")
         dirs = list()
         for data_dir in data_dirs:
-            subject = os.path.split(data_dir)[-1].replace('-', '')
-            dirs.append({"index": int(subject), "path": data_dir})
+            subject_trail_val = os.path.split(data_dir)[-1].replace('-', '')
+            index = int(subject_trail_val)
+            subject = int(subject_trail_val[0:2])
+            dirs.append({"index": index, "path": data_dir, "subject": subject})
         return dirs
+
+
+    def get_data_subset(self, data_dirs, begin, end):
+
+        # get info about the dataset: subject list and num vids per subject
+        data_info = dict()
+        for data in data_dirs:
+
+            subject = data['subject']
+            data_dir = data['path']
+            index = data['index']
+
+            # creates a dictionary of data_dirs indexed by subject number
+            if subject not in data_info: # if subject not in the data info dictionary
+                data_info[subject] = [] # make an emplty list for that subject
+            # append a tuple of the filename, subject num, trial num, and chunk num
+            data_info[subject].append({"index": index, "path": data_dir, "subject": subject})
+
+        subj_list = list(data_info.keys()) # all subjects by number ID (1-27)
+        subj_list.sort()
+        num_subjs = len(subj_list) # number of unique subjects
+
+        # get split of data set (depending on start / end)
+        subj_range = list(range(0,num_subjs))
+        if (begin !=0 or end !=1):
+            subj_range = list(range(int(begin*num_subjs), int(end*num_subjs)))
+            print(subj_range)
+        print('used subject ids:', [subj_list[i] for i in subj_range])
+
+        # compile file list
+        file_info_list = []
+        for i in subj_range:
+            subj_num = subj_list[i]
+            subj_files = data_info[subj_num]
+            file_info_list += subj_files # add file information to file_list (tuple of fname, subj ID, trial num, chunk num)
+            
+        return file_info_list
+
 
     def preprocess_dataset_subprocess(self, data_dirs, config_preprocess, i):
         """   invoked by preprocess_dataset for multi_process.   """
@@ -73,14 +115,29 @@ class PURELoader(BaseLoader):
         count, input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips,
                               saved_filename)
 
+
     def preprocess_dataset(self, data_dirs, config_preprocess,begin, end):
+
+        # print('Data Dirs: Girish Test')
+        # print(data_dirs)
+        # raise ValueError(self.name+ " FORCE QUIT GIRISH")
+
         """Preprocesses the raw data."""
         file_num = len(data_dirs)
         print("file_num:",file_num)
         choose_range = range(0,file_num)
         if (begin !=0 or end !=1):
-            choose_range = range(int(begin*file_num), int(end * file_num))
+
+            data_dirs = self.get_data_subset(data_dirs, begin, end)
+            file_num = len(data_dirs)
+
+            choose_range = range(0, file_num)
             print(choose_range)
+
+        # TO DO GIRISH
+        print(data_dirs)
+        raise ValueError(self.name+ " FORCE QUIT GIRISH")
+        # TO DO GIRISH
 
         pbar = tqdm(list(choose_range))
         # multi_process
@@ -116,6 +173,7 @@ class PURELoader(BaseLoader):
         self.labels = labels
         self.len = len(inputs)
 
+
     @staticmethod
     def read_video(video_file):
         """Reads a video file, returns frames(T,H,W,3) """
@@ -126,6 +184,7 @@ class PURELoader(BaseLoader):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             frames.append(img)
         return np.asarray(frames)
+
 
     @staticmethod
     def read_wave(bvp_file):

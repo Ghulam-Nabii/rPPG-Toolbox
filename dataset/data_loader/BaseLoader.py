@@ -62,6 +62,11 @@ class BaseLoader(Dataset):
         """Returns data directories under the path."""
         return None
 
+    def get_data_subset(self, data_dirs, begin, end):
+        """Returns data directories of subjects used in a single split (train/val/test).
+        Important to note that this function ensures trials from a single subject do not fall into multiple splits."""
+        return None
+
     def preprocess_dataset(self, data_dirs, config_preprocess,begin,end):
         """Parses and preprocesses all data.
 

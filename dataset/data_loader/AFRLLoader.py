@@ -85,12 +85,10 @@ class AFRLLoader(BaseLoader):
 
             if subj_num not in data_info: # if subject not in the data info dictionary
                 data_info[subj_num] = [] # make an emplty list for that subject
-            # append a tuple pf the filename, subject num, trial num, and chunk num
+            # append a tuple of the filename, subject num, trial num, and chunk num
             data_info[subj_num].append((path, fname, subj_num, trial_num, chunk_num))
-
         
         # Data exploration has confirmed that ALL subjects have the same number of clips / total video duration
-
         subj_list = list(data_info.keys()) # all subjects by number ID (1-27)
         subj_list.sort()
         num_subjs = len(subj_list) # number of unique subjects
