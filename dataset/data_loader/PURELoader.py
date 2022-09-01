@@ -118,9 +118,11 @@ class PURELoader(BaseLoader):
 
     def preprocess_dataset(self, data_dirs, config_preprocess,begin, end):
 
+        # TO DO GIRISH
         # print('Data Dirs: Girish Test')
         # print(data_dirs)
         # raise ValueError(self.name+ " FORCE QUIT GIRISH")
+        # TO DO GIRISH
 
         """Preprocesses the raw data."""
         file_num = len(data_dirs)
@@ -135,8 +137,8 @@ class PURELoader(BaseLoader):
             print(choose_range)
 
         # TO DO GIRISH
-        print(data_dirs)
-        raise ValueError(self.name+ " FORCE QUIT GIRISH")
+        # print(data_dirs)
+        # raise ValueError(self.name+ " FORCE QUIT GIRISH")
         # TO DO GIRISH
 
         pbar = tqdm(list(choose_range))
