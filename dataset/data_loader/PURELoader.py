@@ -14,7 +14,6 @@ import numpy as np
 import re
 from dataset.data_loader.BaseLoader import BaseLoader
 from utils.utils import sample
-import glob
 from multiprocessing import Pool, Process, Value, Array, Manager
 from tqdm import tqdm
 
@@ -117,6 +116,7 @@ class PURELoader(BaseLoader):
             frames, bvps, config_preprocess, config_preprocess.LARGE_FACE_BOX)
         count, input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename)
 
+
     def preprocess_dataset(self, data_dirs, config_preprocess, begin, end):
         """Preprocesses the raw data."""
         file_num = len(data_dirs)
@@ -163,6 +163,7 @@ class PURELoader(BaseLoader):
         self.labels = labels
         self.len = len(inputs)
 
+
     @staticmethod
     def read_video(video_file):
         """Reads a video file, returns frames(T,H,W,3) """
@@ -173,6 +174,7 @@ class PURELoader(BaseLoader):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             frames.append(img)
         return np.asarray(frames)
+
 
     @staticmethod
     def read_wave(bvp_file):
