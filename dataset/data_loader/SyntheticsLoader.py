@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 class SyntheticsLoader(BaseLoader):
     """The data loader for the SyntheticsProcessed dataset."""
 
+
     def __init__(self, name, data_path, config_data):
         """Initializes an Synthetics Processed dataloader.
             Args:
@@ -40,6 +41,7 @@ class SyntheticsLoader(BaseLoader):
                 config_data(CfgNode): data settings(ref:config.py).
         """
         super().__init__(name, data_path, config_data)
+
 
     def get_data(self, data_path):
         """Returns data directories under the path(For COHFACE dataset)."""
@@ -82,7 +84,7 @@ class SyntheticsLoader(BaseLoader):
         for i in choose_range:
             process_flag = True
             while (process_flag):       # ensure that every i creates a process
-                if running_num <32:          # in case of too many processes
+                if running_num <16:          # in case of too many processes
                     p = Process(target=self.preprocess_dataset_subprocess, args=(data_dirs,config_preprocess,i))
                     p.start()
                     p_list.append(p)
@@ -124,12 +126,14 @@ class SyntheticsLoader(BaseLoader):
             self.len += self.save(frames_clips, bvps_clips,
                                   data_dirs[i]['index'])
 
+
     @staticmethod
     def read_video(video_file):
         """Reads a video file, returns frames(T,H,W,3) """
         mat = mat73.loadmat(video_file)
         frames = mat['Xsub']  # load raw frames
         return np.asarray(frames)
+
 
     @staticmethod
     def read_wave(wave_file):
