@@ -1,52 +1,54 @@
 BASE: ['']
 TOOLBOX_MODE: "train_and_test"      # "train_and_test"  or "only_test"
 TRAIN:
-  BATCH_SIZE: 2
+  BATCH_SIZE: 4
   EPOCHS: 10
   LR: 1e-3
-  MODEL_FILE_NAME: AFRL_AFRL_UBFC_tscan.pth
+  MODEL_FILE_NAME: PURE_PURE_UBFC_tscan
   DATA:
     FS: 30
-    DATASET: AFRL
+    DATASET: MULTIDATASET
     DO_PREPROCESS: False               # if first time, should be true
     DATA_FORMAT: NDCHW
-    DATA_PATH:   "/gscratch/ubicomp/xliu0/data3/mnt/Datasets/AFRL"          # Raw dataset path, need to be updated - this value is unused, and it overridden by hardcoded values in AFRLLoader
+    DATA_PATH:   "/gscratch/ubicomp/xliu0/data3/mnt/Datasets/PURE/RawData"          # Raw dataset path, need to be updated - this value is unused, and it overridden by hardcoded values in AFRLLoader
     CACHED_PATH: "/gscratch/ubicomp/girishvn/projects/rppg_datasets/PreprocessedData/"    # Processed dataset save path, need to be updated
+    FILE_LIST: "/gscratch/ubicomp/girishvn/projects/rppg_datasets/PreprocessedData/MULTIDATASET/train.csv"
     EXP_DATA_NAME: ""
     BEGIN: 0.0
     END: 0.8
     PREPROCESS :
       DATA_TYPE: ['Normalized','Standardized']
       LABEL_TYPE: Normalized
-      DO_CHUNK: False
+      DO_CHUNK: True
       CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DYNAMIC_DETECTION_FREQUENCY: 180
-      CROP_FACE: False
-      LARGE_FACE_BOX: False
+      DYNAMIC_DETECTION_FREQUENCY : 180
+      CROP_FACE: True
+      LARGE_FACE_BOX: True
       LARGE_BOX_COEF: 1.5
       H: 72
       W: 72
 VALID:
   DATA:
     FS: 30
-    DATASET: AFRL
+    DATASET: MULTIDATASET
     DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NDCHW
-    DATA_PATH:   "/gscratch/ubicomp/xliu0/data3/mnt/Datasets/AFRL"          # Raw dataset path, need to be updated - this value is unused, and it overridden by hardcoded values in AFRLLoader
+    DATA_PATH:   "/gscratch/ubicomp/xliu0/data3/mnt/Datasets/PURE/RawData"          # Raw dataset path, need to be updated - this value is unused, and it overridden by hardcoded values in AFRLLoader
     CACHED_PATH: "/gscratch/ubicomp/girishvn/projects/rppg_datasets/PreprocessedData/"    # Processed dataset save path, need to be updated
+    FILE_LIST: "/gscratch/ubicomp/girishvn/projects/rppg_datasets/PreprocessedData/MULTIDATASET/valid.csv"
     EXP_DATA_NAME: ""
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
       DATA_TYPE: [ 'Normalized','Standardized' ]
       LABEL_TYPE: Normalized
-      DO_CHUNK: False
+      DO_CHUNK: True
       CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DYNAMIC_DETECTION_FREQUENCY: 180
-      CROP_FACE: False
-      LARGE_FACE_BOX: False
+      DYNAMIC_DETECTION_FREQUENCY : 180
+      CROP_FACE: True
+      LARGE_FACE_BOX: True
       LARGE_BOX_COEF: 1.5
       H: 72
       W: 72
@@ -59,6 +61,7 @@ TEST:
     DATA_FORMAT: NDCHW
     DATA_PATH:   "/gscratch/ubicomp/xliu0/data3/mnt/Datasets/UBFC/RawData"          # Raw dataset path, need to be updated
     CACHED_PATH: "/gscratch/ubicomp/girishvn/projects/rppg_datasets/PreprocessedData/"    # Processed dataset save path, need to be updated
+    FILE_LIST: None
     EXP_DATA_NAME: ""
     BEGIN: 0.0
     END: 1.0
@@ -68,7 +71,7 @@ TEST:
       DO_CHUNK: True
       CHUNK_LENGTH: 180
       DYNAMIC_DETECTION: False
-      DYNAMIC_DETECTION_FREQUENCY: 180
+      DYNAMIC_DETECTION_FREQUENCY : 180
       CROP_FACE: True
       LARGE_FACE_BOX: True
       LARGE_BOX_COEF: 1.5
@@ -85,7 +88,5 @@ MODEL:
     FRAME_DEPTH: 10
 INFERENCE:
   BATCH_SIZE: 4
-  MODEL_PATH: "./PreTrainedModels/AFRL_SizeW72_SizeH72_ClipLength180_DataTypeNormalized_Standardized_LabelTypeNormalized_Large_boxFalse_Large_size1.5_Dyamic_DetFalse_det_len180/AFRL_AFRL_UBFC_tscan.pth_Epoch8.pth"
-  #MODEL_PATH:   "./PreTrainedModels/AFRL_SizeW72_SizeH72_ClipLength180_DataTypeNormalized_Standardized_LabelTypeNormalized_Large_boxFalse_Large_size1.5_Dyamic_DetFalse_det_len180/AFRL_AFRL_UBFC_tscan.pth_Epoch9.pth"
-                    # if TRAIN_OR_TEST:"train_and_test", should be "" or anything, it will use currently trained model.
-                    # if TRAIN_OR_TEST:"only_test", should be "path"
+  EVALUATION_METHOD: FFT        # "FFT" or "peak detection"
+  MODEL_PATH:   ""

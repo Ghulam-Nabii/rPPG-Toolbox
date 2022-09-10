@@ -16,6 +16,7 @@ from dataset.data_loader.BaseLoader import BaseLoader
 from utils.utils import sample
 from multiprocessing import Pool, Process, Value, Array, Manager
 from tqdm import tqdm
+import pandas as pd
 
 
 class MultiDatasetLoader(BaseLoader):
@@ -23,25 +24,10 @@ class MultiDatasetLoader(BaseLoader):
 
 
     def __init__(self, name, data_path, config_data):
-        """Initializes an PURE dataloader.
-            Args:
-                data_path(str): path of a folder which stores raw video and bvp data.
-                e.g. data_path should be "RawData" for below dataset structure:
-                -----------------
-                     RawData/
-                     |   |-- 01-01/
-                     |      |-- 01-01/
-                     |      |-- 01-01.json
-                     |   |-- 01-02/
-                     |      |-- 01-02/
-                     |      |-- 01-02.json
-                     |...
-                     |   |-- ii-jj/
-                     |      |-- ii-jj/
-                     |      |-- ii-jj.json
-                -----------------
-                name(str): name of the dataloader.
-                config_data(CfgNode): data settings(ref:config.py).
+        """Initializes an MultiDataset dataloader.
+
+        Only supported option is to full file list from existing csv file lists. 
+        These can be configured in the .yaml config file.
         """
         super().__init__(name, data_path, config_data)
 
@@ -60,10 +46,10 @@ class MultiDatasetLoader(BaseLoader):
     def load(self):
         """Loads the preprocessing data."""
 
-        file_list = self.file_list # get list of files in 
+        file_list_path = self.file_list # get list of files in 
+        file_list_df = pd.read_csv(file_list_path) 
 
-
-        inputs = glob.glob(os.path.join(self.cached_path, "*input*.npy"))
+        inputs = file_list_df['input_list'].tolist()
         if inputs == []:
             raise ValueError(self.name+' dataset loading data error!')
         labels = [input.replace("input", "label") for input in inputs]

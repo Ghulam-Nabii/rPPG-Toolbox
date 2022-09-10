@@ -41,7 +41,7 @@ class BaseLoader(Dataset):
         self.name = name
         self.data_path = data_path
         self.cached_path = config_data.CACHED_PATH
-        # self.file_list = config_data.FILE_LIST # TO DO GIRISH
+        self.file_list = config_data.FILE_LIST
         assert (config_data.BEGIN <  config_data.END)
         assert (config_data.BEGIN > 0 or config_data.BEGIN==0)
         assert (config_data.END < 1 or config_data.END==1)
