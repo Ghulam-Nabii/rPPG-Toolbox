@@ -19,11 +19,13 @@ import signal
 class AFRLLoader(BaseLoader):
     """The data loader for the PURE dataset."""
 
+
     def __init__(self, name, data_path, config_data):
         """Initializes an AFRL dataloader.
 
         """
         super().__init__(name, data_path, config_data)
+
 
     def get_data(self, data_path):
         """Returns data directories under the path(For PURE dataset)."""
@@ -44,6 +46,7 @@ class AFRLLoader(BaseLoader):
 
         frames_clips, bvps_clips = self.preprocess(frames, bvps, config_preprocess, config_preprocess.LARGE_FACE_BOX)
         count, input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename)
+
 
     def preprocess_dataset(self, data_dirs, config_preprocess, begin, end):
 
@@ -116,8 +119,6 @@ class AFRLLoader(BaseLoader):
         p_list = []
         running_num = 0
 
-        # choose_range = range(0,1) # TO DO GIRISH temp for testing
-
         for i in choose_range:
             process_flag = True
             while (process_flag):         # ensure that every i creates a process
@@ -142,8 +143,6 @@ class AFRLLoader(BaseLoader):
             pbar.update(1)
         pbar.close()
 
-        # raise ValueError('GIRISH FORCE QUIT') # TO DO GIRISH
-
         # append all data path and update the length of data
         inputs = glob.glob(os.path.join(self.cached_path, "*input*.npy"))
         if inputs == []:
@@ -153,6 +152,7 @@ class AFRLLoader(BaseLoader):
         self.inputs = inputs
         self.labels = labels
         self.len = len(inputs)
+
 
     @staticmethod
     def read_video(video_file):
@@ -168,6 +168,7 @@ class AFRLLoader(BaseLoader):
 
         return np.asarray(frames)
 
+
     @staticmethod
     def read_wave(bvp_file):
         """Reads a bvp signal file."""
@@ -179,14 +180,10 @@ class AFRLLoader(BaseLoader):
         dResp = mat['drsub']
         #dResp = np.cumsum(dResp)
 
-        # print('READ IN WAVW SHAPE: ', ppg.shape) # TO DO GIRISH
-
         # GIRISH TO DO
         # DO I need to detrend these???
 
         return np.asarray(dPPG)
-
-
 
 
     # Overwrite BaseLoader
