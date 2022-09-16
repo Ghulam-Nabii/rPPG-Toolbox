@@ -261,8 +261,9 @@ class BaseLoader(Dataset):
 
     def save_multi_process(self, frames_clips, bvps_clips, filename):
         """Saves the preprocessing data."""
-        if (not os.path.exists(self.cached_path)):
-            os.makedirs(self.cached_path)
+        # if (not os.path.exists(self.cached_path)):
+        #     os.makedirs(self.cached_path)
+        os.makedirs(self.cached_path, exist_ok=True)
         count = 0
         input_path_name_list = []
         label_path_name_list = []

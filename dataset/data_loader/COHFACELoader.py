@@ -172,8 +172,6 @@ class COHFACELoader(BaseLoader):
         success, frame = VidObj.read()
 
         frames = list()
-
-        # cv2.imwrite("temp/exemple.png", frame)
         while(success):
             frame = cv2.cvtColor(np.array(frame), cv2.COLOR_BGR2RGB)
             frame = np.asarray(frame)
