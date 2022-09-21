@@ -21,8 +21,6 @@ from tqdm import tqdm
 
 class PURELoader(BaseLoader):
     """The data loader for the PURE dataset."""
-
-
     def __init__(self, name, data_path, config_data):
         """Initializes an PURE dataloader.
             Args:
@@ -46,7 +44,6 @@ class PURELoader(BaseLoader):
         """
         super().__init__(name, data_path, config_data)
 
-
     def get_data(self, data_path):
         """Returns data directories under the path(For PURE dataset)."""
 
@@ -61,7 +58,6 @@ class PURELoader(BaseLoader):
             dirs.append({"index": index, "path": data_dir, "subject": subject})
         return dirs
 
-
     def get_data_subset(self, data_dirs, begin, end):
         """Returns a subset of data dirs, split with begin and end values, 
         and ensures no overlapping subjects between splits"""
@@ -69,7 +65,6 @@ class PURELoader(BaseLoader):
         # get info about the dataset: subject list and num vids per subject
         data_info = dict()
         for data in data_dirs:
-
             subject = data['subject']
             data_dir = data['path']
             index = data['index']
@@ -80,13 +75,12 @@ class PURELoader(BaseLoader):
             # append a tuple of the filename, subject num, trial num, and chunk num
             data_info[subject].append({"index": index, "path": data_dir, "subject": subject})
 
-        subj_list = list(data_info.keys()) # all subjects by number ID (1-27)
-        subj_list.sort()
+        subj_list = sorted(list(data_info.keys())) # all subjects by number ID (1-27)
         num_subjs = len(subj_list) # number of unique subjects
 
         # get split of data set (depending on start / end)
-        subj_range = list(range(0,num_subjs))
-        if (begin !=0 or end !=1):
+        subj_range = list(range(0, num_subjs))
+        if begin != 0 or end != 1:
             subj_range = list(range(int(begin*num_subjs), int(end*num_subjs)))
         print('used subject ids for split:', [subj_list[i] for i in subj_range])
 
@@ -95,10 +89,10 @@ class PURELoader(BaseLoader):
         for i in subj_range:
             subj_num = subj_list[i]
             subj_files = data_info[subj_num]
-            file_info_list += subj_files # add file information to file_list (tuple of fname, subj ID, trial num, chunk num)
+            # add file information to file_list (tuple of fname, subj ID, trial num, chunk num)
+            file_info_list += subj_files
         
         return file_info_list
-
 
     def preprocess_dataset_subprocess(self, data_dirs, config_preprocess, i):
         """   invoked by preprocess_dataset for multi_process.   """
@@ -120,12 +114,11 @@ class PURELoader(BaseLoader):
     def preprocess_dataset(self, data_dirs, config_preprocess, begin, end):
         """Preprocesses the raw data."""
         file_num = len(data_dirs)
-        print("file_num:", file_num)
         choose_range = range(0, file_num)
 
         if begin != 0 or end != 1:
-            #choose_range = range(int(begin * file_num), int(end * file_num))
-            data_dirs = self.get_data_subset(data_dirs, begin, end)
+            # data_dirs = self.get_data_subset(data_dirs, begin, end)
+            data_dirs = data_dirs
             choose_range = range(0, len(data_dirs))
         print(choose_range)
 
@@ -137,7 +130,7 @@ class PURELoader(BaseLoader):
             process_flag = True
             while process_flag:            # ensure that every i creates a process
                 if running_num < 16:       # in case of too many processes
-                    p = Process(target=self.preprocess_dataset_subprocess, args=(data_dirs,config_preprocess,i))
+                    p = Process(target=self.preprocess_dataset_subprocess, args=(data_dirs, config_preprocess, i))
                     p.start()
                     p_list.append(p)
                     running_num += 1

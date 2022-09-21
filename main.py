@@ -68,6 +68,8 @@ def train_and_test(config, data_loader_dict):
         model_trainer = trainer.EfficientPhysTrainer.EfficientPhysTrainer(config)
     elif config.MODEL.NAME == 'DeepPhys':
         model_trainer = trainer.DeepPhysTrainer.DeepPhysTrainer(config)
+    elif config.MODEL.NAME == 'SimPerConv3d':
+        model_trainer = trainer.SimPerConv3dTrainer.SimPerConv3dTrainer(config)
     else:
         raise ValueError('Your Model is Not Supported  Yet!')
     model_trainer.train(data_loader_dict)
@@ -84,6 +86,8 @@ def test(config, data_loader_dict):
         model_trainer = trainer.EfficientPhysTrainer.EfficientPhysTrainer(config)
     elif config.MODEL.NAME == 'DeepPhys':
         model_trainer = trainer.DeepPhysTrainer.DeepPhysTrainer(config)
+    elif config.MODEL.NAME == 'SimPerConv3d':
+        model_trainer = trainer.SimPerConv3dTrainer.SimPerConv3dTrainer(config)
     else:
         raise ValueError('Your Model is Not Supported  Yet!')
     model_trainer.test(data_loader_dict)
