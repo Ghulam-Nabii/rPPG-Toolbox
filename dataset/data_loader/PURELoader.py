@@ -117,8 +117,7 @@ class PURELoader(BaseLoader):
         choose_range = range(0, file_num)
 
         if begin != 0 or end != 1:
-            # data_dirs = self.get_data_subset(data_dirs, begin, end)
-            data_dirs = data_dirs
+            data_dirs = self.get_data_subset(data_dirs, begin, end)
             choose_range = range(0, len(data_dirs))
         print(choose_range)
 

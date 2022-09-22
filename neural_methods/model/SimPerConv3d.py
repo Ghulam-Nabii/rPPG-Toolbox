@@ -104,6 +104,7 @@ class BasicStem(nn.Sequential):
     """The default conv-batchnorm-relu stem"""
     def __init__(self):
         super(BasicStem, self).__init__(
+            # nn.BatchNorm3d(3),
             nn.Conv3d(3, 32, kernel_size=(3, 7, 7), stride=(1, 2, 2),
                       padding=(1, 3, 3), bias=False),
             nn.BatchNorm3d(32),
@@ -139,7 +140,7 @@ class VideoResNet(nn.Module):
         self.conv5 = nn.Sequential(
             nn.Conv3d(128, 1, (1, 1, 1)),
             nn.BatchNorm3d(1),
-            nn.ReLU(inplace=True))
+            nn.Tanh())
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         # self.fc = nn.Linear(num_frames, 1)

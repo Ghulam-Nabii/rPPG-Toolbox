@@ -125,7 +125,7 @@ class SimPerConv3dTrainer(BaseTrainer):
         self.model = self.model.to(self.config.DEVICE)
         self.model.eval()
         with torch.no_grad():
-            for _, test_batch in enumerate(data_loader['test']):
+            for batch_idx, test_batch in enumerate(data_loader['test']):
                 batch_size = test_batch[0].shape[0]
                 data_test, labels_test = test_batch[0].to(
                     self.config.DEVICE), test_batch[1].to(self.config.DEVICE)
@@ -137,6 +137,10 @@ class SimPerConv3dTrainer(BaseTrainer):
                 pred_ppg_test = self.model(data_test)
                 pred_ppg_test = pred_ppg_test.view(-1, 1)
                 labels_test = labels_test.view(-1, 1)
+                pred_ppg_numpy = pred_ppg_test.cpu().numpy()
+                label_ppg_numpy = labels_test.cpu().numpy()
+                np.save(f'/gscratch/ubicomp/xliu0/rPPG-Toolbox/debug/pred_ppg_numpy_{str(batch_idx)}.npy', pred_ppg_numpy)
+                np.save(f'/gscratch/ubicomp/xliu0/rPPG-Toolbox/debug/label_ppg_numpy_{str(batch_idx)}.npy', label_ppg_numpy)
                 for idx in range(batch_size):
                     subj_index = test_batch[2][idx]
                     sort_index = int(test_batch[3][idx])
