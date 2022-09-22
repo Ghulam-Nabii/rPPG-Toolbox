@@ -95,7 +95,7 @@ class PURELoader(BaseLoader):
             subj_num = subj_list[i]
             subj_files = data_info[subj_num]
             file_info_list += subj_files # add file information to file_list (tuple of fname, subj ID, trial num, chunk num)
-        
+
         return file_info_list
 
 
