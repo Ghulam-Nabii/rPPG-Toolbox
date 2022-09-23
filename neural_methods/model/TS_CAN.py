@@ -117,39 +117,21 @@ class TSCAN(nn.Module):
 
     def forward(self, inputs, params=None):
         diff_input = inputs[:, :3, :, :]
-        raw_input = inputs[:, 3:, :, :]
 
         diff_input = self.TSM_1(diff_input)
         d1 = torch.tanh(self.motion_conv1(diff_input))
         d1 = self.TSM_2(d1)
         d2 = torch.tanh(self.motion_conv2(d1))
 
-        r1 = torch.tanh(self.apperance_conv1(raw_input))
-        r2 = torch.tanh(self.apperance_conv2(r1))
-
-        g1 = torch.sigmoid(self.apperance_att_conv1(r2))
-        g1 = self.attn_mask_1(g1)
-        gated1 = d2 * g1
-
-        d3 = self.avg_pooling_1(gated1)
+        d3 = self.avg_pooling_1(d2)
         d4 = self.dropout_1(d3)
-
-        r3 = self.avg_pooling_2(r2)
-        r4 = self.dropout_2(r3)
 
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
-        r5 = torch.tanh(self.apperance_conv3(r4))
-        r6 = torch.tanh(self.apperance_conv4(r5))
-
-        g2 = torch.sigmoid(self.apperance_att_conv2(r6))
-        g2 = self.attn_mask_2(g2)
-        gated2 = d6 * g2
-
-        d7 = self.avg_pooling_3(gated2)
+        d7 = self.avg_pooling_3(d6)
         d8 = self.dropout_3(d7)
         d9 = d8.view(d8.size(0), -1)
         d10 = torch.tanh(self.final_dense_1(d9))
