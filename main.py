@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 dataset=train_data_loader,
                 num_workers=16,
                 batch_size=config.TRAIN.BATCH_SIZE,
-                shuffle=False,
+                shuffle=True,
                 worker_init_fn=seed_worker,
                 generator=g
             )

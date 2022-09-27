@@ -136,7 +136,7 @@ class COHFACELoader(BaseLoader):
         for i in choose_range:
             process_flag = True
             while process_flag:            # ensure that every i creates a process
-                if running_num < 16:       # in case of too many processes
+                if running_num < 16:       # in case of too many processes # TO DO GIRISH
                     p = Process(target=self.preprocess_dataset_subprocess, args=(data_dirs,config_preprocess,i))
                     p.start()
                     p_list.append(p)
@@ -153,15 +153,8 @@ class COHFACELoader(BaseLoader):
             p_.join()
             pbar.update(1)
         pbar.close()
-        # append all data path and update the length of data
-        inputs = glob.glob(os.path.join(self.cached_path, "*input*.npy"))
-        if not inputs:
-            raise ValueError(self.name + ' dataset loading data error!')
-        labels = [input.replace("input", "label") for input in inputs]
-        assert (len(inputs) == len(labels))
-        self.inputs = inputs
-        self.labels = labels
-        self.len = len(inputs)
+        # load all data and corresponding labels (sorted for consistency)
+        self.load()
 
 
     @staticmethod
@@ -170,14 +163,16 @@ class COHFACELoader(BaseLoader):
         VidObj = cv2.VideoCapture(video_file)
         #VidObj.set(cv2.CAP_PROP_POS_MSEC, 0)
         success, frame = VidObj.read()
-
         frames = list()
+
         while(success):
             frame = cv2.cvtColor(np.array(frame), cv2.COLOR_BGR2RGB)
             frame = np.asarray(frame)
             frame[np.isnan(frame)] = 0  # TODO: maybe change into avg
             frames.append(frame)
             success, frame = VidObj.read()
+
+        VidObj.release()
 
         return np.asarray(frames)
 
