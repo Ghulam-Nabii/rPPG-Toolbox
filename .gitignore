@@ -3,7 +3,6 @@ __pycache__/
 *.log
 *.mat
 .idea
-preprocess
 preprocessed
 store_model
 store_physnet_model
