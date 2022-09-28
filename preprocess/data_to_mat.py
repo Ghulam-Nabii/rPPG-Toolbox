@@ -1,13 +1,6 @@
 
-from sys import prefix
-from tracemalloc import start
-from turtle import width
 import matplotlib
-import h5py
-matplotlib.use('Agg')#仅保存图片不显示
-import hdf5storage
-from flask import before_render_template
-import skvideo.io
+# matplotlib.use('Agg')#仅保存图片不显示
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
@@ -59,6 +52,10 @@ def mp4_to_mat(input_video,start_time):
     for i in range(frames_num):
         RGB_cut[i] = cv2.resize(img_as_float(RGB_cut[i]), (dim_width, dim_height), interpolation = cv2.INTER_AREA)
     # cv2.show(RGB_cut[0])
+    plt.imshow(RGB_cut[0])
+    plt.title('Sample Preprocessed Frame')
+    plt.savefig('/data/rPPG_dataset/preprocess/result/1.png')
+    plt.show()
     # RGB_cut = cv2.resize(img_as_float(RGB_cut[:, int(width/2)-int(height/2 + 1):int(height/2)+int(width/2), :])
     #         , (dim_width, dim_height), interpolation = cv2.INTER_AREA)
     print(RGB_cut.shape())
@@ -93,11 +90,11 @@ def audio_sync(win_sound_file,video_sound_file):
 
 def data_to_mat(subject_id):
     
-    origin_path =  'E:/rPPG/dataset'#数据集根目录
+    origin_path =  '/data/rPPG_dataset/dataset'#数据集根目录
     current_path = os.path.join(origin_path,str(subject_id))#实验者目录
     os.chdir(current_path) #切换当前路径
     excel_path = str(subject_id)+'.xlsx'
-    subjects_excel_path = 'E:/rPPG/experiments/被试信息表.xlsx' #被试信息表
+    subjects_excel_path = '/data/rPPG_dataset/experiments/被试信息表.xlsx' #被试信息表
     wb = load_workbook(excel_path)
     ws = wb['实验信息总表']
     subjects_wb = load_workbook(subjects_excel_path)
@@ -128,13 +125,13 @@ def data_to_mat(subject_id):
     else:
         print('makeup error!')  
 
-    for i in range(8,experiment_nums):
+    for i in range(0,experiment_nums):
         experiment_id = i
         if experiment_id<16 and experiment_id>=12:
             exercise = 'True'
         else:
             exercise = 'False'
-        prefix ='E:/rPPG/mat_dataset/'+ 'subject'+ str(subject_id)
+        prefix ='/data/rPPG_dataset/mat_dataset/'+ 'subject'+ str(subject_id)
         # if os.path.exists(str(prefix)) is False:
         #         os.makedirs(str(prefix))
         filepath = str(subject_id)+'_'+str(experiment_id)+'.mp4' 
@@ -178,10 +175,13 @@ def data_to_mat(subject_id):
 
         if abs(relative_delay_time) > 30:
             print("---------------------------------同步异常 : ", relative_delay_time,"---------------------------------同步异常")
+            with open(txt_filepath,"a") as filewrite:
+                filewrite.write(str(subject_id)+'_'+str(experiment_id))
         else:
             print("同步正常 : ", relative_delay_time)
             if os.path.exists(str(prefix)) is False:
                 os.makedirs(str(prefix))
+            # RGB_cut = mp4_to_mat(filepath,start_time)
             RGB_cut,RGB_length = preprocess_raw_video(filepath,start_time)
             for i in range(len(gt_pulse)):
                 if gt_time[i]>=gt_end_time:
@@ -192,10 +192,25 @@ def data_to_mat(subject_id):
                     
             re_time = np.linspace(gt_start_time,gt_end_time,RGB_length)
             re_gt_pulse = np.interp(re_time, gt_time, gt_pulse)
-            zero_pulse = np.zeros(1800-RGB_length)
-            re_gt_pulse = np.concatenate((re_gt_pulse,zero_pulse),axis=0)
+            # zero_pulse = np.zeros(1800-RGB_length)
+            # re_gt_pulse = np.concatenate((re_gt_pulse,zero_pulse),axis=0)
             gt_length = len(re_gt_pulse)
             print('GT_ppg length:',gt_length)
+            if gt_length <1800:
+                plusRGB_cut = np.zeros((1800-gt_length, 320, 240, 3),dtype = np.float32)    
+                RGB_cut = np.concatenate((RGB_cut,plusRGB_cut),axis=0)
+                zero_pulse = np.zeros(1800-RGB_length)
+                re_gt_pulse = np.concatenate((re_gt_pulse,zero_pulse),axis=0)
+            else:
+                RGB_cut=RGB_cut[0:1800]
+                re_gt_pulse = re_gt_pulse[0:1800]
+            print('after padding length:',len(re_gt_pulse))
+            # RGB_cut=RGB_cut[:, :, :, [2, 1, 0]]
+            plt.imshow(RGB_cut[0])
+            plt.title('Sample Preprocessed Frame')
+            plt.savefig('/data/rPPG_dataset/preprocess/result/3.png')
+            plt.show()
+
             data_dict = {'video':RGB_cut,'GT_ppg':re_gt_pulse,'light':light,'motion':motion,
                         'exercise':exercise,'skin_color':skin_color,'gender':gender,'glasser':glasses,'hair_cover':hair_cover,'makeup':makeup}
             sio.savemat(mat_filepath,data_dict,do_compression= True)
@@ -209,4 +224,14 @@ def data_to_mat(subject_id):
 
 
 if __name__ == "__main__":
-    subject_id(1)
+    txt_filepath = '/data/rPPG_dataset/mat_dataset/wrong_data.txt'
+   
+    for i in range(1,36):
+        try:
+            data_to_mat(i)
+        except Exception as e:
+            print('error happen in the folder ',i)
+            txt_file = open(txt_filepath,'a')
+            txt_file.write(str(i)+'\n')
+            print(e)
+    txt_file.close()
