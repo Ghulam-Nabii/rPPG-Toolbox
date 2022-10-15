@@ -129,6 +129,8 @@ if __name__ == "__main__":
             train_loader = data_loader.PURELoader.PURELoader
         elif config.TRAIN.DATA.DATASET == "SCAMPS":
             train_loader = data_loader.SCAMPSLoader.SCAMPSLoader
+        elif config.TRAIN.DATA.DATASET == "BP4D":
+            train_loader = data_loader.BP4DLoader.BP4DLoader
         elif config.TRAIN.DATA.DATASET == "MULTIDATASET":
             train_loader = data_loader.MultidatasetLoader.MultidatasetLoader
         else:
@@ -144,6 +146,8 @@ if __name__ == "__main__":
             valid_loader = data_loader.PURELoader.PURELoader
         elif config.VALID.DATA.DATASET == "SCAMPS":
             valid_loader = data_loader.SCAMPSLoader.SCAMPSLoader
+        elif config.VALID.DATA.DATASET == "BP4D":
+            valid_loader = data_loader.BP4DLoader.BP4DLoader
         elif config.VALID.DATA.DATASET == "MULTIDATASET":
             valid_loader = data_loader.MultidatasetLoader.MultidatasetLoader
         else:
@@ -159,6 +163,8 @@ if __name__ == "__main__":
             test_loader = data_loader.PURELoader.PURELoader
         elif config.TEST.DATA.DATASET == "SCAMPS":
             test_loader = data_loader.SCAMPSLoader.SCAMPSLoader
+        elif config.TEST.DATA.DATASET == "BP4D":
+            test_loader = data_loader.BP4DLoader.BP4DLoader
         elif config.TEST.DATA.DATASET == "MULTIDATASET":
             test_loader = data_loader.MultidatasetLoader.MultidatasetLoader
         else:

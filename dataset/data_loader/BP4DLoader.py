@@ -11,15 +11,14 @@ import glob
 import json
 import os
 import re
+import mat73
 
 import cv2
 import numpy as np
 from dataset.data_loader.BaseLoader import BaseLoader
 from tqdm import tqdm
-from utils.utils import sample
 
-
-class PURELoader(BaseLoader):
+class BP4DLoader(BaseLoader):
     """The data loader for the PURE dataset."""
 
     def __init__(self, name, data_path, config_data):
@@ -27,36 +26,23 @@ class PURELoader(BaseLoader):
             Args:
                 data_path(str): path of a folder which stores raw video and bvp data.
                 e.g. data_path should be "RawData" for below dataset structure:
-                -----------------
-                     RawData/
-                     |   |-- 01-01/
-                     |      |-- 01-01/
-                     |      |-- 01-01.json
-                     |   |-- 01-02/
-                     |      |-- 01-02/
-                     |      |-- 01-02.json
-                     |...
-                     |   |-- ii-jj/
-                     |      |-- ii-jj/
-                     |      |-- ii-jj.json
-                -----------------
-                name(str): name of the dataloader.
-                config_data(CfgNode): data settings(ref:config.py).
+
         """
         super().__init__(name, data_path, config_data)
 
     def get_data(self, data_path):
         """Returns data directories under the path(For PURE dataset)."""
 
-        data_dirs = glob.glob(data_path + os.sep + "*-*")
+        data_dirs = glob.glob(data_path + os.sep + "*.mat")
         if not data_dirs:
             raise ValueError(self.name + " dataset get data error!")
         dirs = list()
         for data_dir in data_dirs:
-            subject_trail_val = os.path.split(data_dir)[-1].replace('-', '')
-            index = int(subject_trail_val)
-            subject = int(subject_trail_val[0:2])
-            dirs.append({"index": index, "path": data_dir, "subject": subject})
+            subject_data = os.path.split(data_dir)[-1].replace('.mat', '')
+            subj_sex = subject_data[0]
+            subject = int(subject_data[1:4])
+            index = subject_data
+            dirs.append({"index": subject_data, "path": data_dir, "subject": subject, "sex": subj_sex})
         return dirs
 
     def get_data_subset(self, data_dirs, begin, end):
@@ -64,53 +50,156 @@ class PURELoader(BaseLoader):
         and ensures no overlapping subjects between splits"""
 
         # get info about the dataset: subject list and num vids per subject
-        data_info = dict()
+        m_data_info = dict() # data dict for Male subjects
+        f_data_info = dict() # data dict for Female subjects
         for data in data_dirs:
 
             subject = data['subject']
             data_dir = data['path']
             index = data['index']
+            sex = data['sex']
 
-            # creates a dictionary of data_dirs indexed by subject number
-            if subject not in data_info:  # if subject not in the data info dictionary
-                data_info[subject] = []  # make an emplty list for that subject
-            # append a tuple of the filename, subject num, trial num, and chunk num
-            data_info[subject].append({"index": index, "path": data_dir, "subject": subject})
+            trials_to_skip = ['F041T7', 'F054T9'] # GIRISH TO DO, Talk to BP4D ppl about this
+            if index in trials_to_skip:
+                continue
 
-        subj_list = list(data_info.keys())  # all subjects by number ID (1-27)
-        subj_list.sort()
-        num_subjs = len(subj_list)  # number of unique subjects
+            if sex == 'M':
+                # creates a dictionary of data_dirs indexed by subject number
+                if subject not in m_data_info:  # if subject not in the data info dictionary
+                    m_data_info[subject] = []  # make an emplty list for that subject
+                # append a tuple of the filename, subject num, trial num, and chunk num
+                m_data_info[subject].append({"index": index, "path": data_dir, "subject": subject, "sex": sex})
 
-        # get split of data set (depending on start / end)
-        subj_range = list(range(0, num_subjs))
+
+            elif sex == 'F':
+                # creates a dictionary of data_dirs indexed by subject number
+                if subject not in f_data_info:  # if subject not in the data info dictionary
+                    f_data_info[subject] = []  # make an emplty list for that subject
+                # append a tuple of the filename, subject num, trial num, and chunk num
+                f_data_info[subject].append({"index": index, "path": data_dir, "subject": subject, "sex": sex})
+
+        # List of Male subjects
+        m_subj_list = list(m_data_info.keys())  # all subjects by number ID
+        m_subj_list.sort()
+        m_num_subjs = len(m_subj_list)  # number of unique subjects
+
+        # get male split of data set (depending on start / end)
+        m_subj_range = list(range(0, m_num_subjs))
         if begin != 0 or end != 1:
-            subj_range = list(range(int(begin * num_subjs), int(end * num_subjs)))
-        print('used subject ids for split:', [subj_list[i] for i in subj_range])
+            m_subj_range = list(range(int(begin * m_num_subjs), int(end * m_num_subjs)))
+        print('Used Male subject ids for split:', [m_subj_list[i] for i in m_subj_range])
+
+        # List of Female subjects
+        f_subj_list = list(f_data_info.keys())  # all subjects by number ID 
+        f_subj_list.sort()
+        f_num_subjs = len(f_subj_list)  # number of unique subjects
+
+        # get female split of data set (depending on start / end)
+        f_subj_range = list(range(0, f_num_subjs))
+        if begin != 0 or end != 1:
+            f_subj_range = list(range(int(begin * f_num_subjs), int(end * f_num_subjs)))
+        print('Used Female subject ids for split:', [f_subj_list[i] for i in f_subj_range])
 
         # compile file list
         file_info_list = []
-        for i in subj_range:
-            subj_num = subj_list[i]
-            subj_files = data_info[subj_num]
-            file_info_list += subj_files  # add file information to file_list (tuple of fname, subj ID, trial num,
-            # chunk num)
+
+        # add male subjects to file list
+        for i in m_subj_range:
+            subj_num = m_subj_list[i]
+            subj_files = m_data_info[subj_num]
+            file_info_list += subj_files  # add file info to file_list (tuple of fname, subj ID, trial num, # chunk num)
+
+        # add female subjects to file list
+        for i in f_subj_range:
+            subj_num = f_subj_list[i]
+            subj_files = f_data_info[subj_num]
+            file_info_list += subj_files  # add file info to file_list (tuple of fname, subj ID, trial num, # chunk num)
 
         return file_info_list
 
     def preprocess_dataset_subprocess(self, data_dirs, config_preprocess, i, file_list_dict):
         """   invoked by preprocess_dataset for multi_process.   """
-        filename = os.path.split(data_dirs[i]['path'])[-1]
+        filename = data_dirs[i]['path']
         saved_filename = data_dirs[i]['index']
         
-        frames = self.read_video(
-            os.path.join(data_dirs[i]['path'], filename, ""))
-        bvps = self.read_wave(
-            os.path.join(data_dirs[i]['path'], "{0}.json".format(filename)))
+        frames = self.read_video(filename)
+        labels = self.read_labels(os.path.join(filename))
 
-        bvps = sample(bvps, frames.shape[0])
-        frames_clips, bvps_clips = self.preprocess(frames, bvps, config_preprocess, config_preprocess.LARGE_FACE_BOX)
-        count, input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename)
+        # GIRISH TO DO
+        if frames.shape[0] != labels.shape[0]:  # CHECK IF ALL DATA THE SAME LENGTH
+            raise ValueError(self.name, 'frame and label time axis not the same')
+
+        frames_clips, labels_clips = self.preprocess(frames, labels, config_preprocess, config_preprocess.LARGE_FACE_BOX)
+        count, input_name_list, label_name_list = self.save_multi_process(frames_clips, labels_clips, saved_filename)
         file_list_dict[i] = input_name_list
+
+    def preprocess(self, frames, labels, config_preprocess, large_box=False):
+        """Preprocesses a pair of data.
+
+        Args:
+            frames(np.array): Frames in a video.
+            bvps(np.array): Bvp signal labels for a video.
+            config_preprocess(CfgNode): preprocessing settings(ref:config.py).
+            large_box(bool): Whether to use a large bounding box in face cropping, e.g. in moving situations.
+        """
+        # frames = self.resize(
+        #     frames,
+        #     config_preprocess.DYNAMIC_DETECTION,
+        #     config_preprocess.DYNAMIC_DETECTION_FREQUENCY,
+        #     config_preprocess.W,
+        #     config_preprocess.H,
+        #     config_preprocess.LARGE_FACE_BOX,
+        #     config_preprocess.CROP_FACE,
+        #     config_preprocess.LARGE_BOX_COEF)
+        
+        # data_type
+        data = list()
+        for data_type in config_preprocess.DATA_TYPE:
+            f_c = frames.copy()
+            if data_type == "Raw":
+                data.append(f_c[:-1, :, :, :])
+            elif data_type == "Normalized":
+                data.append(BaseLoader.diff_normalize_data(f_c))
+            elif data_type == "Standardized":
+                data.append(BaseLoader.standardized_data(f_c)[:-1, :, :, :])
+            else:
+                raise ValueError("Unsupported data type!")
+        data = np.concatenate(data, axis=3)
+
+        # TO DO: GIRISH - is the below thinking correct
+        # normalize both time-series, periodic values (bp and resp waves), all other values can be left as is
+        bp_wave = labels[:, 0]
+        resp_wave = labels[:, 5]
+        labels = labels[:-1] # adjust size to match normalized size
+
+        if config_preprocess.LABEL_TYPE == "Raw":
+            pass
+        elif config_preprocess.LABEL_TYPE == "Normalized":
+            bp_wave = BaseLoader.diff_normalize_label(bp_wave)
+            resp_wave = BaseLoader.diff_normalize_label(resp_wave)
+            labels[:, 0] = bp_wave
+            labels[:, 5] = resp_wave
+        elif config_preprocess.LABEL_TYPE == "Standardized":
+            bp_wave = BaseLoader.standardized_label(bp_wave)[:-1]
+            resp_wave = BaseLoader.standardized_label(resp_wave)[:-1]
+            labels[:, 0] = bp_wave
+            labels[:, 5] = resp_wave
+        
+        # Chunk clips and labels
+        if config_preprocess.DO_CHUNK:
+            frames_clips, labels_clips = self.chunk(data, labels, config_preprocess.CHUNK_LENGTH)
+        else:
+            frames_clips = np.array([data])
+            labels_clips = np.array([labels])
+
+        return frames_clips, labels_clips
+
+    def chunk(self, frames, labels, chunk_length):
+        """Chunks the data into clips."""
+        clip_num = frames.shape[0] // chunk_length
+        frames_clips = [frames[i * chunk_length:(i + 1) * chunk_length] for i in range(clip_num)]
+        labels_clips = [labels[i * chunk_length:(i + 1) * chunk_length] for i in range(clip_num)]
+        return np.array(frames_clips), np.array(labels_clips)
 
     def preprocess_dataset(self, data_dirs, config_preprocess, begin, end):
         """Preprocesses the raw data."""
@@ -127,40 +216,33 @@ class PURELoader(BaseLoader):
         self.build_file_list(file_list_dict, len(list(choose_range))) # build file list
         self.load() # load all data and corresponding labels (sorted for consistency)
 
-    def load(self):
-        """Loads the preprocessing data listed in the file list"""
-
-        file_list_path = self.file_list_path # get list of files in 
-
-        # TO DO: Insert functionality to generate file list if it does not already exist
-
-        file_list_df = pd.read_csv(file_list_path) 
-        inputs = file_list_df['input_files'].tolist()
-        if inputs == []:
-            raise ValueError(self.name + ' dataset loading data error!')
-        inputs = sorted(inputs)  # sort input file name list
-        labels = [input_file.replace("input", "label") for input_file in inputs]
-        self.inputs = inputs
-        self.labels = labels
-        self.len = len(inputs)
-        print("Loaded data len:", self.len)
-
     @staticmethod
-    def read_video(video_file):
+    def read_video(file_path):
         """Reads a video file, returns frames(T,H,W,3) """
-        frames = list()
-        all_png = sorted(glob.glob(video_file + '*.png'))
-        for png_path in all_png:
-            img = cv2.imread(png_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            frames.append(img)
+        f = mat73.loadmat(file_path)
+        frames = f['X']
         return np.asarray(frames)
 
     @staticmethod
-    def read_wave(bvp_file):
+    def read_labels(file_path):
         """Reads a bvp signal file."""
-        with open(bvp_file, "r") as f:
-            labels = json.load(f)
-            waves = [label["Value"]["waveform"]
-                     for label in labels["/FullPackage"]]
-        return np.asarray(waves)
+        f = mat73.loadmat(file_path)
+        keys = list(f.keys())
+        data_len = f['X'].shape[0]
+        keys.remove('X')
+
+        # GIRISH TO DO: Eventually make ALL
+        #labels = np.zeros((data_len, len(keys)))
+        labels = np.zeros((data_len, 8))
+        # labels by index in array:
+        # 0: bp_wave, 1: hr_bpm, 2: systolic_bp, 3: diastolic_bp, 4: mean_bp, 5: resp_wave, 6: resp_bpm, 7: eda, [8,47]: AUs
+        labels_order_list = ['bp_wave', 'HR_bpm', 'systolic_bp', 'diastolic_bp', 'mean_bp', 'resp_wave', 'resp_bpm', 'eda']
+        # for l in labels_order_list: 
+        #     keys.remove(l)
+        # labels_order_list += keys 
+
+        # re-order labels numpy mtx
+        for i in range(len(labels_order_list)):
+            labels[:, i] = f[labels_order_list[i]]
+
+        return np.asarray(labels)

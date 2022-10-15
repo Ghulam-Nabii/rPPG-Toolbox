@@ -267,3 +267,142 @@ class MTTS_CAN(nn.Module):
         out_r = self.final_dense_2_r(d11)
 
         return out_y, out_r
+
+
+
+class TSCANMultihead(nn.Module):
+
+    def __init__(self, in_channels=3, nb_filters1=32, nb_filters2=64, kernel_size=3, dropout_rate1=0.25,
+                 dropout_rate2=0.5, pool_size=(2, 2), nb_dense=128, frame_depth=20, img_size=36):
+        """Definition of TS_CAN.
+        Args:
+          in_channels: the number of input channel. Default: 3
+          frame_depth: the number of frame (window size) used in temport shift. Default: 20
+          img_size: height/width of each frame. Default: 36.
+        Returns:
+          TS_CAN model.
+        """
+        super(TSCANMultihead, self).__init__()
+        self.in_channels = in_channels
+        self.kernel_size = kernel_size
+        self.dropout_rate1 = dropout_rate1
+        self.dropout_rate2 = dropout_rate2
+        self.pool_size = pool_size
+        self.nb_filters1 = nb_filters1
+        self.nb_filters2 = nb_filters2
+        self.nb_dense = nb_dense
+        # TSM layers
+        self.TSM_1 = TSM(n_segment=frame_depth)
+        self.TSM_2 = TSM(n_segment=frame_depth)
+        self.TSM_3 = TSM(n_segment=frame_depth)
+        self.TSM_4 = TSM(n_segment=frame_depth)
+        # Motion branch convs
+        self.motion_conv1 = nn.Conv2d(self.in_channels, self.nb_filters1, kernel_size=self.kernel_size, padding=(1, 1),
+                                      bias=True)
+        self.motion_conv2 = nn.Conv2d(
+            self.nb_filters1, self.nb_filters1, kernel_size=self.kernel_size, bias=True)
+        self.motion_conv3 = nn.Conv2d(self.nb_filters1, self.nb_filters2, kernel_size=self.kernel_size, padding=(1, 1),
+                                      bias=True)
+        self.motion_conv4 = nn.Conv2d(
+            self.nb_filters2, self.nb_filters2, kernel_size=self.kernel_size, bias=True)
+        # Apperance branch convs
+        self.apperance_conv1 = nn.Conv2d(self.in_channels, self.nb_filters1, kernel_size=self.kernel_size,
+                                         padding=(1, 1), bias=True)
+        self.apperance_conv2 = nn.Conv2d(
+            self.nb_filters1, self.nb_filters1, kernel_size=self.kernel_size, bias=True)
+        self.apperance_conv3 = nn.Conv2d(self.nb_filters1, self.nb_filters2, kernel_size=self.kernel_size,
+                                         padding=(1, 1), bias=True)
+        self.apperance_conv4 = nn.Conv2d(
+            self.nb_filters2, self.nb_filters2, kernel_size=self.kernel_size, bias=True)
+        # Attention layers
+        self.apperance_att_conv1 = nn.Conv2d(
+            self.nb_filters1, 1, kernel_size=1, padding=(0, 0), bias=True)
+        self.attn_mask_1 = Attention_mask()
+        self.apperance_att_conv2 = nn.Conv2d(
+            self.nb_filters2, 1, kernel_size=1, padding=(0, 0), bias=True)
+        self.attn_mask_2 = Attention_mask()
+        # Avg pooling
+        self.avg_pooling_1 = nn.AvgPool2d(self.pool_size)
+        self.avg_pooling_2 = nn.AvgPool2d(self.pool_size)
+        self.avg_pooling_3 = nn.AvgPool2d(self.pool_size)
+        # Dropout layers
+        self.dropout_1 = nn.Dropout(self.dropout_rate1)
+        self.dropout_2 = nn.Dropout(self.dropout_rate1)
+        self.dropout_3 = nn.Dropout(self.dropout_rate1)
+        self.dropout_4_BPwave = nn.Dropout(self.dropout_rate2)
+        self.dropout_4_BPsystolic = nn.Dropout(self.dropout_rate2)
+        self.dropout_4_BPdiastolic = nn.Dropout(self.dropout_rate2)
+        self.dropout_4_respwave = nn.Dropout(self.dropout_rate2)
+        self.dropout_4_eda = nn.Dropout(self.dropout_rate2)
+        # Dense layers
+        self.final_dense_BPwave_1 = nn.Linear(16384, self.nb_dense, bias=True)
+        self.final_dense_BPsystolic_1 = nn.Linear(16384, self.nb_dense, bias=True)
+        self.final_dense_BPdiastolic_1 = nn.Linear(16384, self.nb_dense, bias=True)
+        self.final_dense_respwave_1 = nn.Linear(16384, self.nb_dense, bias=True)
+        self.final_dense_eda_1 = nn.Linear(16384, self.nb_dense, bias=True)
+
+        self.final_dense_BPwave_2 = nn.Linear(self.nb_dense, 1, bias=True)
+        self.final_dense_BPsystolic_2 = nn.Linear(self.nb_dense, 1, bias=True)
+        self.final_dense_BPdiastolic_2 = nn.Linear(self.nb_dense, 1, bias=True)
+        self.final_dense_respwave_2 = nn.Linear(self.nb_dense, 1, bias=True)
+        self.final_dense_eda_2 = nn.Linear(self.nb_dense, 1, bias=True)
+
+    def forward(self, inputs, params=None):
+        diff_input = inputs[:, :3, :, :]
+        raw_input = inputs[:, 3:, :, :]
+
+        diff_input = self.TSM_1(diff_input)
+        d1 = torch.tanh(self.motion_conv1(diff_input))
+        d1 = self.TSM_2(d1)
+        d2 = torch.tanh(self.motion_conv2(d1))
+
+        r1 = torch.tanh(self.apperance_conv1(raw_input))
+        r2 = torch.tanh(self.apperance_conv2(r1))
+
+        g1 = torch.sigmoid(self.apperance_att_conv1(r2))
+        g1 = self.attn_mask_1(g1)
+        gated1 = d2 * g1
+
+        d3 = self.avg_pooling_1(gated1)
+        d4 = self.dropout_1(d3)
+
+        r3 = self.avg_pooling_2(r2)
+        r4 = self.dropout_2(r3)
+
+        d4 = self.TSM_3(d4)
+        d5 = torch.tanh(self.motion_conv3(d4))
+        d5 = self.TSM_4(d5)
+        d6 = torch.tanh(self.motion_conv4(d5))
+
+        r5 = torch.tanh(self.apperance_conv3(r4))
+        r6 = torch.tanh(self.apperance_conv4(r5))
+
+        g2 = torch.sigmoid(self.apperance_att_conv2(r6))
+        g2 = self.attn_mask_2(g2)
+        gated2 = d6 * g2
+
+        d7 = self.avg_pooling_3(gated2)
+        d8 = self.dropout_3(d7)
+        d9 = d8.view(d8.size(0), -1)
+
+        d10_BPwave = torch.tanh(self.final_dense_BPwave_1(d9))
+        d11_BPwave = self.dropout_4_BPwave(d10_BPwave)
+        out_BPwave = self.final_dense_BPwave_2(d11_BPwave)
+
+        d10_BPsystolic = torch.tanh(self.final_dense_BPsystolic_1(d9))
+        d11_BPsystolic = self.dropout_4_BPsystolic(d10_BPsystolic)
+        out_BPsystolic = self.final_dense_BPsystolic_2(d11_BPsystolic)
+
+        d10_BPdiastolic = torch.tanh(self.final_dense_BPdiastolic_1(d9))
+        d11_BPdiastolic = self.dropout_4_BPdiastolic(d10_BPdiastolic)
+        out_BPdiastolic = self.final_dense_BPdiastolic_2(d11_BPdiastolic)
+
+        d10_respwave = torch.tanh(self.final_dense_respwave_1(d9))
+        d11_respwave = self.dropout_4_respwave(d10_respwave)
+        out_respwave = self.final_dense_respwave_2(d11_respwave)
+
+        d10_eda = torch.tanh(self.final_dense_eda_1(d9))
+        d11_eda = self.dropout_4_eda(d10_eda)
+        out_eda = self.final_dense_eda_2(d11_eda)
+
+        return out_BPwave, out_BPsystolic, out_BPdiastolic, out_respwave, out_eda
