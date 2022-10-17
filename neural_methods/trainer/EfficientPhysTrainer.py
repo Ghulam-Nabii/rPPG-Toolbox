@@ -26,7 +26,7 @@ class EfficientPhysTrainer(BaseTrainer):
         self.model = torch.nn.DataParallel(self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
         self.criterion = torch.nn.MSELoss()
         self.optimizer = optim.AdamW(
-            self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0)
+            self.model.parameters(), lr=config.TRAIN.LR, weight_decay=config.TRAIN.LR*10)
         self.max_epoch_num = config.TRAIN.EPOCHS
         self.model_dir = config.MODEL.MODEL_DIR
         self.model_file_name = config.TRAIN.MODEL_FILE_NAME
