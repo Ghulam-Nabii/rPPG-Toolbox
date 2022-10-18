@@ -1,10 +1,4 @@
-"""The dataloader for PURE datasets.
-
-Details for the PURE Dataset see https://www.tu-ilmenau.de/universitaet/fakultaeten/fakultaet-informatik-und-automatisierung/profil/institute-und-fachgebiete/institut-fuer-technische-informatik-und-ingenieurinformatik/fachgebiet-neuroinformatik-und-kognitive-robotik/data-sets-code/pulse-rate-detection-dataset-pure
-If you use this dataset, please cite the following publication:
-Stricker, R., Müller, S., Gross, H.-M.
-Non-contact Video-based Pulse Rate Measurement on a Mobile Service Robot
-in: Proc. 23st IEEE Int. Symposium on Robot and Human Interactive Communication (Ro-Man 2014), Edinburgh, Scotland, UK, pp. 1056 - 1062, IEEE 2014
+"""The dataloader for BP4D datasets.
 """
 import glob
 import glob
