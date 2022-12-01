@@ -145,7 +145,9 @@ class TscanTrainer(BaseTrainer):
                     predictions[subj_index][sort_index] = pred_ppg_test[idx * self.chunk_len:(idx + 1) * self.chunk_len]
                     labels[subj_index][sort_index] = labels_test[idx * self.chunk_len:(idx + 1) * self.chunk_len]
 
-        calculate_metrics(predictions, labels, self.config)
+        for window_size in [5, 10, 15, 20, 25, 30]:
+            print(f'-----Window Size: {str(window_size)}------')
+            calculate_metrics(predictions, labels, self.config, window_size=window_size)
 
     def save_model(self, index):
         if not os.path.exists(self.model_dir):

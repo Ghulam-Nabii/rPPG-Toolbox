@@ -56,7 +56,8 @@ def calculate_SNR(pxx_pred, f_pred, currHR, signal):
 # %%  Processing
 
 
-def calculate_metric_peak_per_video(predictions, labels, diff_flag=True, signal='pulse', window_size=360, fs=30, bpFlag=True):
+def calculate_metric_peak_per_video(predictions, labels, window_size, stride=1, diff_flag=True, signal='pulse',
+                                    fs=30, bpFlag=True):
     if signal == 'pulse':
         [b, a] = butter(1, [0.75 / fs * 2, 2.5 / fs * 2],
                         btype='bandpass')  # 2.5 -> 1.7
@@ -64,14 +65,16 @@ def calculate_metric_peak_per_video(predictions, labels, diff_flag=True, signal=
         [b, a] = butter(1, [0.08 / fs * 2, 0.5 / fs * 2], btype='bandpass')
 
     data_len = len(predictions)
+    window_size = window_size * fs
+    stride = stride * fs
     HR_pred = []
     HR0_pred = []
     all_peaks = []
     all_peaks0 = []
     pred_signal = []
     label_signal = []
-    window_size = data_len
-    for j in range(0, data_len, window_size):
+
+    for j in range(0, data_len, stride):
         if j == 0 and (j+window_size) > data_len:
             pred_window = predictions
             label_window = labels
@@ -117,66 +120,93 @@ def calculate_metric_peak_per_video(predictions, labels, diff_flag=True, signal=
         pred_signal.extend(pred_window.tolist())
         label_signal.extend(label_window.tolist())
 
-    HR = np.mean(np.array(HR_pred))
-    HR0 = np.mean(np.array(HR0_pred))
+        HR_pred.append(temp_HR)
+        HR0_pred.append(temp_HR_0)
 
-    return HR0, HR
+    HR_mean = np.mean(np.array(HR_pred))
+    HR0_mean = np.mean(np.array(HR0_pred))
+    HR_pred = np.array(HR_pred)
+    HR0_pred = np.array(HR0_pred)
+
+    return HR_mean, HR0_mean, HR_pred, HR0_pred
 
 
-def calculate_metric_per_video(predictions, labels, diff_flag=True, signal='pulse', fs=30, bpFlag=True):
+def calculate_metric_per_video(predictions, labels, window_size, stride=1, diff_flag=True, signal='pulse', fs=30, bpFlag=True):
     if signal == 'pulse':
         [b, a] = butter(1, [0.75 / fs * 2, 2.5 / fs * 2],
                         btype='bandpass')  # 2.5 -> 1.7
     else:
         [b, a] = butter(1, [0.08 / fs * 2, 0.5 / fs * 2], btype='bandpass')
 
-    if diff_flag == True:
-        if signal == 'pulse':
-            pred_window = detrend(np.cumsum(predictions), 100)
-            label_window = detrend(np.cumsum(labels), 100)
-        else:
-            pred_window = np.cumsum(predictions)
-    else:
-        if signal == 'pulse':
-            pred_window = detrend(predictions, 100)
-            label_window = detrend(labels, 100)
-        else:
+    data_len = len(predictions)
+    window_size = window_size * fs
+    stride = stride * fs
+    HR_pred = []
+    HR0_pred = []
+
+    for j in range(0, data_len, stride):
+        if j == 0 and (j+window_size) > data_len:
             pred_window = predictions
+            label_window = labels
+        elif (j + window_size) > data_len:
+            break
+        else:
+            pred_window = predictions[j:j + window_size]
+            label_window = labels[j:j + window_size]
 
-    if bpFlag:
-        pred_window = scipy.signal.filtfilt(b, a, np.double(pred_window))
-        label_window = scipy.signal.filtfilt(b, a, np.double(label_window))
+        if diff_flag == True:
+            if signal == 'pulse':
+                pred_window = detrend(np.cumsum(pred_window), 100)
+                label_window = detrend(np.cumsum(label_window), 100)
+            else:
+                pred_window = np.cumsum(pred_window)
+        else:
+            if signal == 'pulse':
+                pred_window = detrend(pred_window, 100)
+                label_window = detrend(label_window, 100)
+            else:
+                pred_window = pred_window
 
-    pred_window = np.expand_dims(pred_window, 0)
-    label_window = np.expand_dims(label_window, 0)
-    # Predictions FFT
-    N = next_power_of_2(pred_window.shape[1])
-    f_prd, pxx_pred = scipy.signal.periodogram(
-        pred_window, fs=fs, nfft=N, detrend=False)
-    if signal == 'pulse':
-        # regular Heart beat are 0.75*60 and 2.5*60
-        fmask_pred = np.argwhere((f_prd >= 0.75) & (f_prd <= 2.5))
-    else:
-        # regular Heart beat are 0.75*60 and 2.5*60
-        fmask_pred = np.argwhere((f_prd >= 0.08) & (f_prd <= 0.5))
-    pred_window = np.take(f_prd, fmask_pred)
-    # Labels FFT
-    f_label, pxx_label = scipy.signal.periodogram(
-        label_window, fs=fs, nfft=N, detrend=False)
-    if signal == 'pulse':
-        # regular Heart beat are 0.75*60 and 2.5*60
-        fmask_label = np.argwhere((f_label >= 0.75) & (f_label <= 2.5))
-    else:
-        # regular Heart beat are 0.75*60 and 2.5*60
-        fmask_label = np.argwhere((f_label >= 0.08) & (f_label <= 0.5))
-    label_window = np.take(f_label, fmask_label)
+        if bpFlag:
+            pred_window = scipy.signal.filtfilt(b, a, np.double(pred_window))
+            label_window = scipy.signal.filtfilt(b, a, np.double(label_window))
 
-    # MAE
-    temp_HR, temp_HR_0 = calculate_HR(
-        pxx_pred, pred_window, fmask_pred, pxx_label, label_window, fmask_label)
-    # temp_SNR = calculate_SNR(pxx_pred, f_prd, temp_HR_0, signal)
+        pred_window = np.expand_dims(pred_window, 0)
+        label_window = np.expand_dims(label_window, 0)
+        # Predictions FFT
+        N = next_power_of_2(pred_window.shape[1])
+        f_prd, pxx_pred = scipy.signal.periodogram(
+            pred_window, fs=fs, nfft=N, detrend=False)
+        if signal == 'pulse':
+            # regular Heart beat are 0.75*60 and 2.5*60
+            fmask_pred = np.argwhere((f_prd >= 0.75) & (f_prd <= 2.5))
+        else:
+            # regular Heart beat are 0.75*60 and 2.5*60
+            fmask_pred = np.argwhere((f_prd >= 0.08) & (f_prd <= 0.5))
+        pred_window = np.take(f_prd, fmask_pred)
+        # Labels FFT
+        f_label, pxx_label = scipy.signal.periodogram(
+            label_window, fs=fs, nfft=N, detrend=False)
+        if signal == 'pulse':
+            # regular Heart beat are 0.75*60 and 2.5*60
+            fmask_label = np.argwhere((f_label >= 0.75) & (f_label <= 2.5))
+        else:
+            # regular Heart beat are 0.75*60 and 2.5*60
+            fmask_label = np.argwhere((f_label >= 0.08) & (f_label <= 0.5))
+        label_window = np.take(f_label, fmask_label)
 
-    return temp_HR_0, temp_HR
+        # MAE
+        temp_HR, temp_HR_0 = calculate_HR(
+            pxx_pred, pred_window, fmask_pred, pxx_label, label_window, fmask_label)
+
+        HR_pred.append(temp_HR)
+        HR0_pred.append(temp_HR_0)
+
+    HR_mean = np.mean(np.array(HR_pred))
+    HR0_mean = np.mean(np.array(HR0_pred))
+    HR_pred = np.array(HR_pred)
+    HR0_pred = np.array(HR0_pred)
+    return HR_mean, HR0_mean, HR_pred, HR0_pred
 
 
 def calculate_metric(predictions, labels, signal='pulse', window_size=360, fs=30, bpFlag=True):

@@ -45,11 +45,16 @@ def reform_data_from_dict(data):
     return np.reshape(sort_data.cpu(), (-1))
 
 
-def calculate_metrics(predictions, labels, config):
+def calculate_metrics(predictions, labels, config, window_size=60):
     predict_hr_fft_all = list()
     gt_hr_fft_all = list()
     predict_hr_peak_all = list()
     gt_hr_peak_all = list()
+    predict_hr_fft_all_window = list()
+    gt_hr_fft_all_window = list()
+    predict_hr_peak_all_window = list()
+    gt_hr_peak_all_window = list()
+
     for index in predictions.keys():
         prediction = reform_data_from_dict(predictions[index])
         label = reform_data_from_dict(labels[index])
@@ -61,18 +66,32 @@ def calculate_metrics(predictions, labels, config):
             diff_flag_test = True
         else:
             raise ValueError("Not supported label type in testing!")
-        gt_hr_fft, pred_hr_fft = calculate_metric_per_video(
-            prediction, label,diff_flag=diff_flag_test, fs=config.TEST.DATA.FS)
-        gt_hr_peak, pred_hr_peak = calculate_metric_peak_per_video(
-            prediction, label,diff_flag=diff_flag_test, fs=config.TEST.DATA.FS)
+        gt_hr_fft, pred_hr_fft, window_gt_hr_fft, window_pred_hr_fft = calculate_metric_per_video(
+            prediction, label, window_size=window_size, diff_flag=diff_flag_test, fs=config.TEST.DATA.FS)
+        gt_hr_peak, pred_hr_peak, window_gt_hr_peak, window_pred_hr_peak = calculate_metric_peak_per_video(
+            prediction, label, window_size=window_size, diff_flag=diff_flag_test, fs=config.TEST.DATA.FS)
         gt_hr_fft_all.append(gt_hr_fft)
         predict_hr_fft_all.append(pred_hr_fft)
-        predict_hr_peak_all.append(pred_hr_peak)
         gt_hr_peak_all.append(gt_hr_peak)
+        predict_hr_peak_all.append(pred_hr_peak)
+        gt_hr_fft_all_window.append(window_gt_hr_fft)
+        predict_hr_fft_all_window.append(window_pred_hr_fft)
+        gt_hr_peak_all_window.append(window_gt_hr_peak)
+        predict_hr_peak_all_window.append(window_pred_hr_peak)
+
     predict_hr_peak_all = np.array(predict_hr_peak_all)
     predict_hr_fft_all = np.array(predict_hr_fft_all)
     gt_hr_peak_all = np.array(gt_hr_peak_all)
     gt_hr_fft_all = np.array(gt_hr_fft_all)
+    gt_hr_fft_all_window = np.array(gt_hr_fft_all_window)
+    predict_hr_fft_all_window = np.array(predict_hr_fft_all_window)
+    gt_hr_peak_all_window = np.array(gt_hr_peak_all_window)
+    predict_hr_peak_all_window = np.array(predict_hr_peak_all_window)
+    np.save(f'gt_hr_fft_all_window_{str(window_size)}.npy', gt_hr_fft_all_window)
+    np.save(f'predict_hr_fft_all_window_{str(window_size)}.npy', predict_hr_fft_all_window)
+    np.save(f'gt_hr_peak_all_window_{str(window_size)}.npy', gt_hr_peak_all_window)
+    np.save(f'predict_hr_peak_all_window_{str(window_size)}.npy', predict_hr_peak_all_window)
+
     for metric in config.TEST.METRICS:
         if metric == "MAE":
             if config.INFERENCE.EVALUATION_METHOD == "FFT":
